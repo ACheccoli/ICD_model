@@ -1,0 +1,700 @@
+Node Tumor {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node ChemoT {
+    rate_up = 0.0;
+    rate_down = $degChemo;
+}
+
+Node anti_CTLA4 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node anti_PD1 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+
+Node DyingTumor {
+    rate_up = (Tumor & ChemoT) ? $effectChemo : 0.0 ;
+    rate_down = 0.0 ;
+}
+
+Node cDC1 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node cDC2 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node moDC {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node pDC {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node CD4 {
+	logic = !LAG3;
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node CD8 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+Node a_cDC1 {
+	logic = (cDC1 &  P2X7R);
+	rate_up = @logic ? $u_a_cDC1 : 0.0;
+	rate_down = 0.0;
+}
+
+Node a_cDC2 {
+	logic = (cDC2 &  P2X7R);
+	rate_up = @logic ? $u_a_cDC2 : 0.0;
+	rate_down = 0.0;
+}
+
+Node CD4_Act {
+	logic = (( IL2R | IL4R | (CD28 & TCR_II)) & CD4);
+	rate_up = @logic ? $u_CD4_Act : 0.0;
+	rate_down = @logic ? 0.0 : 0.0; // no activation stop stop 
+}
+
+Node P2Y2R {
+	logic = (cDC1 | cDC2);
+	rate_up = @logic ? $u_P2Y2R : 0.0;
+	rate_down = 0.0;
+}
+
+Node P2X7R {
+
+	logic = ((cDC1 | cDC2) & P2Y2R);
+	rate_up = @logic ? $u_P2X7R : 0.0;
+	rate_down = 0.0;
+}
+
+Node FPR1 {
+
+	logic = (a_cDC1 | a_cDC2);
+	rate_up = @logic ? $u_FPR1 : 0.0;
+	rate_down = 0.0;
+}
+
+Node LRP1 {
+
+	logic = ((cDC1 | cDC2) & FPR1);
+	rate_up = @logic ? $u_LRP1 : 0.0;
+	rate_down = 0.0;
+}
+
+Node TLR4 {
+	logic = ((a_cDC1 | a_cDC2) & LRP1 & FPR1);
+	rate_up = @logic ? $u_TLR4 : 0.0;
+	rate_down = 0.0;
+}
+
+Node IFN1R {
+	logic = (Tumor); 
+	rate_up = @logic ? $u_IFN1R : 0.0;
+	rate_down = 0.0;
+}
+
+Node IL1BR {
+
+	logic = (CD4);
+	rate_up = @logic ? $u_IL1BR : 0.0;
+	rate_down = @logic ? 0.0 : 0.0;
+}
+
+Node IL2R {
+
+	logic = (CD8) | (CD4);
+	rate_up = @logic ? $u_IL2R : 0.0;
+	rate_down = @logic ? 0.0 : 0.0;
+}
+
+Node IL4R {
+
+	logic = CD4 | Th2;
+	rate_up = @logic ? $u_IL4R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL4R;
+}
+
+Node IL6R {
+
+	logic = CD4 | Th17;
+	rate_up = @logic ? $u_IL6R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL6R;
+}
+
+Node IL10R {
+
+	logic =  (CD4);
+	rate_up = @logic ? $u_IL10R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL10R;
+}
+
+Node IL12R {
+
+	logic = (CD4 & !CD8) | (Th1 & !CD8);
+	rate_up = @logic ? $u_IL12R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL12R;
+}
+
+Node IL27R {
+
+	logic = (CD4);
+	rate_up = @logic ? $u_IL27R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL27R;
+}
+
+
+Node IFNgR {
+
+	logic = ((CD8 & !CD4)|(!CD8 & CD4));
+	rate_up = @logic ? $u_IFNgR : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFNgR;
+}
+
+Node IL17R {
+
+	logic = (CD4 | CTL);
+	rate_up = @logic ? $u_IL17R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL17R;
+}
+
+Node TGFbR {
+
+	logic = (CD4);
+	rate_up = @logic ? $u_TGFbR : 0.0;
+	rate_down = @logic ? 0.0 : $d_TGFbR;
+}
+
+Node CXCR3 {
+
+	logic = ((!CD4 & CD8) | (CD4 & !CD8)) | (CXCR3);
+	rate_up = @logic ? $u_CXCR3 : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node CD28 {
+
+	logic = (((!CD4 & CD8) | (CD4 & !CD8)) & CXCR3 & !CTLA4 & !PD1 & !SHP) | (CD28 & (!CTLA4 | !PD1) & !SHP); 
+	rate_up = @logic ? $u_CD28 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CD28;
+}
+
+Node CTLA4 {
+
+	logic = (!Ca_NFAT & FOXP3 & !NFIL3 & CD80 & !anti_CTLA4) | (Ca_NFAT & !NFIL3 & CD80 & !anti_CTLA4); 
+	rate_up = @logic ? $u_CTLA4 : 0.0;
+	rate_down = @logic ? 0.0: $d_CTLA4;
+}
+
+Node PD1 {
+
+	logic = (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & !NFAT & PD_L1 & !PRDM1 & MAF) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & !NFAT & PD_L1 & PRDM1) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & NFAT & PD_L1) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & YY1 & PD_L1) | (!Ca_NFAT & !Tbet & !FOXO1 & AP1 & PD_L1) | (!Ca_NFAT & !Tbet & FOXO1 & PD_L1) | (Ca_NFAT & !Tbet & PD_L1); 
+	rate_up = @logic ? $u_PD1 : 0.0;
+	rate_down =@logic ? 0.0: $d_PD1;
+}
+
+Node TNFRs {
+  logic = (!NFkB & !MAPKs & !Ca_NFAT & !FOXP3 & AP1 & !NFIL3 & TNFRs_L) | (!NFkB & !MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & TNFRs_L) | (!NFkB & MAPKs & !Ca_NFAT & !NFIL3 & TNFRs_L) | (NFkB & !Ca_NFAT & !NFIL3 & TNFRs_L);
+  rate_up = @logic ? $u_TNFRs : 0;
+  rate_down = @logic ? 0 : $d_TNFRs;
+}
+
+
+Node TCR_I {
+
+	logic = (CD28 & CD8 & !CTLA4 & !PD1)  ; // &(!SHP & LCK_FYN & CALR)
+	rate_up = @logic ? $u_TCR_I : 0.0;
+	rate_down = @logic ? 0.0: $d_TCR_I;
+}
+
+Node TCR_II {
+
+	logic = (CD4 & CD28 & !PD1);  // &(!SHP & LCK_FYN & CALR)
+	rate_up = @logic ? $u_TCR_II : 0.0;
+	rate_down = @logic ? 0.0: $d_TCR_II;
+}
+
+Node CD226 {
+  logic = (!TIGIT & TIGIT_L);
+  rate_up = @logic ? $u_CD226 : 0;
+  rate_down = @logic ? 0 : $d_CD226;
+}
+
+// Pathways
+
+Node Proliferation_Survival {
+  logic = (PI3K_AKT & IL2R);
+  rate_up = @logic ? $u_Proliferation_Survival : 0;
+  rate_down = @logic ? 0 : $d_Proliferation_Survival;
+}
+
+Node PRDM1 {
+  logic = (STAT3);
+  rate_up = @logic ? $u_PRDM1 : 0;
+  rate_down = @logic ? 0 : $d_PRDM1;
+}
+
+Node MAF {
+  logic = (STAT3);
+  rate_up = @logic ? $u_MAF : 0;
+  rate_down = @logic ? 0 : $d_MAF;
+}
+
+Node STAT4 {
+  logic = (IL12R);
+  rate_up = @logic ? $u_STAT4 : 0;
+  rate_down = @logic ? 0 : $d_STAT4;
+}
+
+Node NFkB {
+  logic = (!LAT_complex & !PKC_teta & TRAFs) | (!LAT_complex & PKC_teta) | (LAT_complex);
+  rate_up = @logic ? $u_NFkB : 0;
+  rate_down = @logic ? 0 : $d_NFkB;
+}
+
+Node MAPKs {
+  logic = (!LAT_complex & !VAV & ICOS) | (!LAT_complex & VAV) | (LAT_complex);
+  rate_up = @logic ? $u_MAPKs : 0;
+  rate_down = @logic ? 0 : $d_MAPKs;
+}
+
+Node Ca_NFAT {
+  logic = (!PLCG & ICOS & !LAG3) | (PLCG & !LAG3);
+  rate_up = @logic ? $u_Ca_NFAT : 0;
+  rate_down = @logic ? 0 : $d_Ca_NFAT;
+}
+
+Node PI3K_AKT {
+  logic = (!CD28 & !LAT_complex & !ICOS & TRAFs & !PTEN & !PP2A & !SHIP) | (!CD28 & !LAT_complex & ICOS & !PTEN & !PP2A & !SHIP) | (!CD28 & LAT_complex & !PTEN & !PP2A & !SHIP) | (CD28 & !PTEN & !PP2A & !SHIP);
+  rate_up = @logic ? $u_PI3K_AKT : 0;
+  rate_down = @logic ? 0 : $d_PI3K_AKT;
+}
+
+Node Tbet {
+  logic = (!STAT1 & !GSK3) | (!STAT1 & GSK3 & STAT4) | (STAT1);
+  rate_up = @logic ? $u_Tbet : 0;
+  rate_down = @logic ? 0 : $d_Tbet;
+}
+
+Node FOXP3 {
+  logic = (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & !STAT1 & SMAD2_3 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & STAT1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & AP1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & FOXO1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & Ca_NFAT & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & MAPKs & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & NFkB & !PI3K_AKT & !STAT3 & !NFIL3) | (CTLA4 & !PI3K_AKT & !STAT3 & !NFIL3);
+  rate_up = @logic ? $u_FOXP3 : 0;
+  rate_down = @logic ? 0 : $d_FOXP3;
+}
+
+Node FOXO1 {
+  logic = (!PI3K_AKT);
+  rate_up = @logic ? $u_FOXO1 : 0;
+  rate_down = @logic ? 0 : $d_FOXO1;
+}
+
+
+Node LAT_complex {
+  logic = (TCR_I | TCR_II);
+  rate_up = @logic ? $u_LAT_complex : 0;
+  rate_down = @logic ? 0 : $d_LAT_complex;
+}
+
+Node VAV {
+  logic = (!GRB2 & CD226) | (GRB2);
+  rate_up = @logic ? $u_VAV : 0;
+  rate_down = @logic ? 0 : $d_VAV;
+}
+
+Node PLCG {
+  logic = (LAT_complex);
+  rate_up = @logic ? $u_PLCG : 0;
+  rate_down = @logic ? 0 : $d_PLCG;
+}
+
+Node PKC_teta {
+  logic = (VAV);
+  rate_up = @logic ? $u_PKC_teta : 0;
+  rate_down = @logic ? 0 : $d_PKC_teta;
+}
+
+Node TIM3 {
+  logic = (!Tbet & !NFIL3 & TIM3_L & !PRDM1 & MAF) | (!Tbet & !NFIL3 & TIM3_L & PRDM1) | (!Tbet & NFIL3 & TIM3_L) | (Tbet & TIM3_L);
+  rate_up = @logic ? $u_TIM3 : 0;
+  rate_down = @logic ? 0 : $d_TIM3;
+}
+
+Node TIGIT {
+  logic = (!FOXP3 & TIGIT_L & !PRDM1 & MAF) | (!FOXP3 & TIGIT_L & PRDM1) | (FOXP3 & TIGIT_L);
+  rate_up = @logic ? $u_TIGIT : 0;
+  rate_down = @logic ? 0 : $d_TIGIT;
+}
+
+Node ICOS {
+  logic = (!MAPKs & !Ca_NFAT & !FOXP3 & !NFAT & !NFIL3 & ICOS_L & PRDM1) | (!MAPKs & !Ca_NFAT & !FOXP3 & NFAT & !NFIL3 & ICOS_L) | (!MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & ICOS_L) | (!MAPKs & Ca_NFAT & !NFIL3 & ICOS_L) | (MAPKs & !NFIL3 & ICOS_L);
+  rate_up = @logic ? $u_ICOS : 0;
+  rate_down = @logic ? 0 : $d_ICOS;
+}
+
+Node TRAFs {
+  logic = (TNFRs);
+  rate_up = @logic ? $u_TRAFs : 0;
+  rate_down = @logic ? 0 : $d_TRAFs;
+}
+
+Node CK2 {
+  logic = (!PD1);
+  rate_up = @logic ? $u_CK2 : 0;
+  rate_down = @logic ? 0 : $d_CK2;
+}
+
+Node PTEN {
+  logic = (!CK2);
+  rate_up = @logic ? $u_PTEN : 0;
+  rate_down = @logic ? 0 : $d_PTEN;
+}
+
+Node PP2A {
+  logic = (CTLA4);
+  rate_up = @logic ? $u_PP2A : 0;
+  rate_down = @logic ? 0 : $d_PP2A;
+}
+
+Node SHIP {
+  logic = (TIGIT);
+  rate_up = @logic ? $u_SHIP : 0;
+  rate_down = @logic ? 0 : $d_SHIP;
+}
+
+Node SHP {
+  logic = (PD1);
+  rate_up = @logic ? $u_SHP : 0;
+  rate_down = @logic ? 0 : $d_SHP;
+}
+
+Node LAG3 {
+  logic = (!Tbet & !YY1 & !LAG3_L & MHC_II & !PRDM1 & MAF) | (!Tbet & !YY1 & !LAG3_L & MHC_II & PRDM1) | (!Tbet & !YY1 & LAG3_L & !PRDM1 & MAF) | (!Tbet & !YY1 & LAG3_L & PRDM1) | (!Tbet & YY1 & !LAG3_L & MHC_II) | (!Tbet & YY1 & LAG3_L);
+  rate_up = @logic ? $u_LAG3 : 0;
+  rate_down = @logic ? 0 : $d_LAG3;
+}
+
+Node AP1 {
+  logic = (MAPKs);
+  rate_up = @logic ? $u_AP1 : 0;
+  rate_down = @logic ? 0 : $d_AP1;
+}
+
+Node YY1 {
+  logic = (MAPKs);
+  rate_up = @logic ? $u_YY1 : 0;
+  rate_down = @logic ? 0 : $d_YY1;
+}
+
+Node NFAT {
+  logic = (Ca_NFAT & !GSK3);
+  rate_up = @logic ? $u_NFAT : 0;
+  rate_down = @logic ? 0 : $d_NFAT;
+}
+
+Node LCK_FYN {
+  logic = (!TIM3 & CD8) | (CD4 & !TIM3);
+  rate_up = @logic ? $u_LCK_FYN : 0;
+  rate_down = @logic ? 0 : $d_LCK_FYN;
+}
+
+Node STAT1 {
+  logic = (!IFNgR & IL27R) | (IFNgR);
+  rate_up = @logic ? $u_STAT1 : 0;
+  rate_down = @logic ? 0 : $d_STAT1;
+}
+
+Node SMAD2_3 {
+  logic = (TGFbR & !SMAD7);
+  rate_up = @logic ? $u_SMAD2_3 : 0;
+  rate_down = @logic ? 0 : $d_SMAD2_3;
+}
+
+Node SMAD7 {
+  logic = (!FOXP3);
+  rate_up = @logic ? $u_SMAD7 : 0;
+  rate_down = @logic ? 0 : $d_SMAD7;
+}
+
+Node STAT3 {
+  logic = (IL27R);
+  rate_up = @logic ? $u_STAT3 : 0;
+  rate_down = @logic ? 0 : $d_STAT3;
+}
+
+Node NFIL3 {
+  logic = (!SMAD2_3 & STAT3);
+  rate_up = @logic ? $u_NFIL3 : 0;
+  rate_down = @logic ? 0 : $d_NFIL3;
+}
+
+Node GRB2 {
+  logic = (CD28);
+  rate_up = @logic ? $u_GRB2 : 0;
+  rate_down = @logic ? 0 : $d_GRB2;
+}
+
+Node GSK3 {
+  logic = (!PI3K_AKT);
+  rate_up = @logic ? $u_GSK3 : 0;
+  rate_down = @logic ? 0 : $d_GSK3;
+}
+
+// Cell types
+
+Node Th1 {
+
+	logic = (CD4 & CD28 & TCR_II & IL12R & Ca_NFAT & Tbet) | Th1; 
+	rate_up = @logic ? $u_Th1 : 0.0;
+	rate_down = 0.0;
+}
+
+Node Th2 {
+
+	logic = (CD4 & CD28 & TCR_II & (IL4R | IL2R) & !(Th1 | Th17 | Treg)) | Th2; 
+	rate_up = @logic ? $u_Th2 : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node Th17 {
+
+	logic = (CD4 & CD28 & TCR_II) & (IL6R | IL1BR | TGFbR) & !(Th1 | Th2 | Treg) | Th17;
+	rate_up = @logic ? $u_Th17 : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node Treg {
+
+	logic = (Treg & FOXP3) | ((CD4 & CD28 & TCR_II) & (TGFbR | IL2R) & !(Th1 | Th2 | Th17) & FOXP3) | ((CD4 & CD28 & TCR_II) & (IFNgR | IL27R) & !(Th1 | Th2 | Th17) & !IL27R & FOXP3); 
+	rate_up = @logic ? $u_Treg : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node CALR {
+
+	logic = (DyingTumor);
+	rate_up = @logic ? $u_CALR : 0.0;
+	rate_down = @logic ? 0.0 : $d_CALR;
+}
+
+Node ATP {
+
+	logic = (DyingTumor);
+	rate_up = @logic ? $u_ATP : 0.0;
+	rate_down = @logic ? 0.0 : $d_ATP;
+}
+
+Node ANXA1 {
+
+	logic = (DyingTumor);
+	rate_up = @logic ? $u_ANXA1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_ANXA1;
+}
+
+Node HMGB1 {
+
+	logic = (DyingTumor & ANXA1);
+	rate_up = @logic ? $u_HMGB1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_HMGB1;
+}
+
+Node CXCL10 {
+
+	logic = (Tumor & IFN1R);
+	rate_up = @logic ? $u_CXCL10 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CXCL10;
+}
+
+Node LAG3_L {
+  logic = (LAG3_L);
+  rate_up = @logic ? $u_LAG3_L : 0;
+  rate_down = @logic ? 0 : $d_LAG3_L;
+}
+
+Node TIM3_L {
+  logic = (TIM3_L);
+  rate_up = @logic ? $u_TIM3_L : 0;
+  rate_down = @logic ? 0 : $d_TIM3_L;
+}
+
+Node TIGIT_L {
+  logic = (TIGIT_L);
+  rate_up = @logic ? $u_TIGIT_L : 0;
+  rate_down = @logic ? 0 : $d_TIGIT_L;
+}
+
+Node PD_L1 {
+	
+	logic = (Tumor) | ((CD8 | CD4) & IFNgR);
+	rate_up = @logic ? $u_PD_L1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_PD_L1;
+}
+
+Node TNFRs_L {
+  logic = (TNFRs_L);
+  rate_up = @logic ? $u_TNFRs_L : 0;
+  rate_down = @logic ? 0 : $d_TNFRs_L;
+}
+
+Node ICOS_L {
+  logic = (ICOS_L);
+  rate_up = @logic ? $u_ICOS_L : 0;
+  rate_down = @logic ? 0 : $d_ICOS_L;
+}
+
+Node CD80 {
+
+	logic = ((a_cDC1 | a_cDC2) & TLR4 & LRP1);
+	rate_up = @logic ? $u_CD80 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CD80;
+}
+
+Node MHC_I {
+
+	logic = (a_cDC1 & TLR4 & LRP1);
+	rate_up = @logic ? $u_MHC_I : 0.0;
+	rate_down = @logic ? 0.0 : $d_MHC_I;
+}
+
+Node MHC_II {
+
+	logic = ((a_cDC1 | a_cDC2) & TLR4 & LRP1);
+	rate_up = @logic ? $u_MHC_II : 0.0;
+	rate_down = @logic ? 0.0 : $d_MHC_II;
+}
+
+Node IL1B {
+	
+	logic = (a_cDC2 & TLR4 & LRP1);
+	rate_up = @logic ? $u_IL1B : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL1B;
+}
+
+Node IL2 {
+
+	logic = ((NFkB & AP1 & NFAT) & ((CD4 & CD28 & TCR_II) & CD4_Act) | (Th1 & CD4_Act) | (a_cDC2 & TLR4 & TCR_II ) | (Treg & CD4_Act));
+	rate_up = @logic ? $u_IL2 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL2;
+}
+
+Node IL4 {
+
+	logic = (Th2 & CD4_Act) | ((CD4 & CD28 & TCR_II) & CD4_Act) | (a_cDC2 & TLR4 & TCR_II );
+	rate_up = @logic ? $u_IL4 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL4;
+}
+
+Node IL6 {
+
+	logic = (pDC | moDC ) | (a_cDC2 & TLR4 & TCR_II) | (Th17 & CD4_Act) ;
+	rate_up = @logic ? $u_IL6 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL6;
+}
+
+Node IL10 {
+
+	logic = (a_cDC2 & TLR4) | (Treg & CD4_Act);
+	rate_up = @logic ? $u_IL10 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL10;
+}
+
+Node IL12 {
+
+	logic = (a_cDC1 & TLR4);
+	rate_up = @logic ? $u_IL12 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL12;
+}
+
+Node IL17 {
+
+	logic = (IL1BR & Th17 & CD4_Act);
+	rate_up = @logic ? $u_IL17 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL17;
+}
+
+Node IL27 {
+
+	logic = (a_cDC1 & TLR4);
+	rate_up = @logic ? $u_IL27 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL27;
+}
+
+
+Node IFNg {
+
+	logic = (IL12R & CTL) | (IFNgR & Th1 & CD4_Act) | (IL12R & CTL) | ((CD4 & CD28 & TCR_II) & IL12R & CD4_Act ) | (IL12R & Th1 & CD4_Act) | moDC | pDC;
+	rate_up = @logic ? $u_IFNg : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFNg;
+}
+
+
+Node TGFb {
+
+	logic = (CD4 & CD4_Act) | (Treg & CD4_Act) | Tumor | a_cDC2 | moDC;
+	rate_up = @logic ? $u_TGFb : 0.0;
+	rate_down = @logic ? 0.0 : $d_TGFb;
+}
+
+Node Perforin {
+
+	logic = CTL;
+	rate_up = @logic ? $u_Perforin : 0.0;
+	rate_down = (-log(1-$pop_Tumor))/$PerforinRecycled;
+}
+
+
+Node preCTL {
+
+	logic = (IL2R & CD8 & TCR_I);
+	rate_up = @logic ? $u_preCTL : 0.0;
+	rate_down = 0.0;
+}
+
+Node CTL {
+
+	logic = ((!IL2R & IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
+	rate_up = @logic ? $u_CTL : 0.0;
+	rate_down = 0 ;
+}
+
+Node IFN1 {
+
+	logic = (Tumor & TLR4) | ((cDC1 | cDC2) & TLR4);
+	rate_up = @logic ? $u_IFN1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFN1;
+}
+
+Node Division {
+
+
+	rate_up = (Tumor? $growth_tumor : 0.0) + ((CTL & !(Perforin)) ? $clonal_exp_rate : 0.0);
+	rate_down = 0.0;
+}
+
+Node Death {
+
+	rate_up = (Tumor ? ((-log(1-$rate_perforin)*$aggressivity)+$ChemoEffect) : 0.0) + (Perforin ? $PerforinDeath : 0.0) + ((CTL & Perforin) ? 0.03 : 0.0 ); //no death of CTL ?
+	rate_down = 0.0;
+}
+
