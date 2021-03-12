@@ -1,6 +1,6 @@
 death = Death;
 division = Division;
-steps  = 800;	
+steps  = 500;	
 MaBoSS = MaBoSS;	
 
 $pop_Tumor u= p[(Tumor) = (1)];

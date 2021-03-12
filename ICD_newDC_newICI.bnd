@@ -45,7 +45,6 @@ Node pDC {
 }
 
 Node CD4 {
-	logic = !LAG3;
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
@@ -593,7 +592,7 @@ Node IL1B {
 
 Node IL2 {
 
-	logic = ((NFkB & AP1 & NFAT) & ((CD4 & CD28 & TCR_II) & CD4_Act) | (Th1 & CD4_Act) | (a_cDC2 & TLR4 & TCR_II ) | (Treg & CD4_Act));
+	logic = (NFkB & AP1 & NFAT & CD4 & CD28 & TCR_II & CD4_Act) | (Th1 & CD4_Act) | (a_cDC2 & TLR4 & TCR_II ) | (Treg & CD4_Act);
 	rate_up = @logic ? $u_IL2 : 0.0;
 	rate_down = @logic ? 0.0 : $d_IL2;
 }
@@ -673,7 +672,7 @@ Node preCTL {
 
 Node CTL {
 
-	logic = ((!IL2R & IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
+	logic = ((IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
 	rate_up = @logic ? $u_CTL : 0.0;
 	rate_down = 0 ;
 }
@@ -688,7 +687,7 @@ Node IFN1 {
 Node Division {
 
 
-	rate_up = (Tumor? $growth_tumor : 0.0) + ((CTL & !(Perforin)) ? $clonal_exp_rate : 0.0);
+	rate_up = (Tumor? $growth_tumor : 0.0) + ((CTL & !(Perforin) & Proliferation_Survival) ? $clonal_exp_rate : 0.0);
 	rate_down = 0.0;
 }
 
