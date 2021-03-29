@@ -1,83 +1,110 @@
+// from ICD_2020
 Node Tumor {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+// from ICD_2020, needs to be tailored according to different therapies we're going to test
 Node ChemoT {
     rate_up = 0.0;
     rate_down = $degChemo;
 }
 
+//adjuvant therapy for boosting immune response, apparently less influential then anti_PD1
+// anti_CTLA4 is supposed to avoid the CTL population to be suppressed by Treg effects.
 Node anti_CTLA4 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+//adjuvant therapy for boosting immune response counteracting the immune suppression mediated by Tregs
 Node anti_PD1 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
-
+// from ICD_2020, state of tumor cells
 Node DyingTumor {
     rate_up = (Tumor & ChemoT) ? $effectChemo : 0.0 ;
     rate_down = 0.0 ;
 }
 
+// FOR ALL DENDRITIC CELLS WE MAY REFER TO https://www.nature.com/articles/s41577-019-0210-z/tables/1
+
+// conventional DC type 1 subpopulation https://www.nature.com/articles/s41586-020-2611-3
 Node cDC1 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+// conventional DC type 2 subpopulation https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5904714/
 Node cDC2 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
+
+// monocyte-derived DC subpopulation https://www.nature.com/articles/s41577-019-0210-z?utm_source=nri_etoc&utm_medium=email&utm_campaign=toc_41577_20_1&utm_content=20200102&WT.ec_id=NRI-201901&sap-outbound-id=9792D00B6B344538D5AD359ADF15A2743DFBE00C&mkt-key=005056B0331B1EE88A9278F4778DE352
 
 Node moDC {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+// plasmacytoid DC subpopulation: same article cited above
+
 Node pDC {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
+
+// naive CD4 T cells
 
 Node CD4 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+// naive CD8 T cells
+
 Node CD8 {
 	rate_up = 0.0;
 	rate_down = 0.0;
 }
 
+// active state for cDC1: enables production of ligands and expression of receptors
 Node a_cDC1 {
 	logic = (cDC1 &  P2X7R);
 	rate_up = @logic ? $u_a_cDC1 : 0.0;
 	rate_down = 0.0;
 }
 
+// active state for cDC1: enables production of ligands and expression of receptors
 Node a_cDC2 {
 	logic = (cDC2 &  P2X7R);
 	rate_up = @logic ? $u_a_cDC2 : 0.0;
 	rate_down = 0.0;
 }
 
+// active state for CD4 T cells, follows stimulation of different interleukins
 Node CD4_Act {
 	logic = (( IL2R | IL4R | (CD28 & TCR_II)) & CD4);
 	rate_up = @logic ? $u_CD4_Act : 0.0;
 	rate_down = @logic ? 0.0 : 0.0; // no activation stop stop 
 }
 
+
+// RECEPTORS
+
+
+
+// purinergic receptor of DCs - PRRs
 Node P2Y2R {
 	logic = (cDC1 | cDC2);
 	rate_up = @logic ? $u_P2Y2R : 0.0;
 	rate_down = 0.0;
 }
 
+// purinergic receptor of DCs - PRRs. we assume this receptor is expressed by both cDC
 Node P2X7R {
 
 	logic = ((cDC1 | cDC2) & P2Y2R);
@@ -85,6 +112,7 @@ Node P2X7R {
 	rate_down = 0.0;
 }
 
+// Formyl peptide receptor 1. its ligand is ANXA1. apparently this FPR1/ANXA1 axis may enhance aggresiveness of tumor https://pubmed.ncbi.nlm.nih.gov/29932988/;
 Node FPR1 {
 
 	logic = (a_cDC1 | a_cDC2);
@@ -92,6 +120,7 @@ Node FPR1 {
 	rate_down = 0.0;
 }
 
+// receptor expressed by cDC. it binds zith CALR
 Node LRP1 {
 
 	logic = ((cDC1 | cDC2) & FPR1);
@@ -99,11 +128,14 @@ Node LRP1 {
 	rate_down = 0.0;
 }
 
+// receptor expressed by cDC1 hi, cDC2 low
 Node TLR4 {
 	logic = ((a_cDC1 | a_cDC2) & LRP1 & FPR1);
 	rate_up = @logic ? $u_TLR4 : 0.0;
 	rate_down = 0.0;
 }
+
+// type 1 interferon receptor (new name will be IFNAR) possibly we will consider also the fact that this receptor is also expressed by T cells and works as costimulatory mechanism for priming antitumor immunity .
 
 Node IFN1R {
 	logic = (Tumor); 
@@ -111,19 +143,22 @@ Node IFN1R {
 	rate_down = 0.0;
 }
 
+// receptor for interleukin that mediates the production of IFN gamma; https://pubmed.ncbi.nlm.nih.gov/10653850/
 Node IL1BR {
-
 	logic = (CD4);
 	rate_up = @logic ? $u_IL1BR : 0.0;
 	rate_down = @logic ? 0.0 : 0.0;
 }
 
+// receptor for IL2, drives CD4 and CD8 differentiation processes
 Node IL2R {
 
 	logic = (CD8) | (CD4);
 	rate_up = @logic ? $u_IL2R : 0.0;
 	rate_down = @logic ? 0.0 : 0.0;
 }
+
+// receptor for IL4, drives the differentiation of Th2 cells and enable the active status of naive CD4
 
 Node IL4R {
 
@@ -132,6 +167,7 @@ Node IL4R {
 	rate_down = @logic ? 0.0 : $d_IL4R;
 }
 
+// receptor for IL6, drives maturation of Th17 cells
 Node IL6R {
 
 	logic = CD4 | Th17;
@@ -139,12 +175,15 @@ Node IL6R {
 	rate_down = @logic ? 0.0 : $d_IL6R;
 }
 
+// receptor for IL10, dirves maturation of Tregs
 Node IL10R {
 
 	logic =  (CD4);
 	rate_up = @logic ? $u_IL10R : 0.0;
 	rate_down = @logic ? 0.0 : $d_IL10R;
 }
+
+// receptor for IL12, drives maturation of preCTL and Th1 through the production of IFNgamma and activating STAT4 TF.
 
 Node IL12R {
 
@@ -153,6 +192,8 @@ Node IL12R {
 	rate_down = @logic ? 0.0 : $d_IL12R;
 }
 
+// receptor for IL27 which enhance the production of IFNgamma (synergiwing with IL12)by CD4 Tcells. It activates STAT1, STAT3 and Tregs differentiation https://www.genecards.org/cgi-bin/carddisp.pl?gene=IL27
+
 Node IL27R {
 
 	logic = (CD4);
@@ -160,6 +201,7 @@ Node IL27R {
 	rate_down = @logic ? 0.0 : $d_IL27R;
 }
 
+// IFNgamma receptor. expressed by CD4 or CD8 Tcells, activates STAT1 TF, drives maturation of T regs and CTL, it also enhance PD_L1 production.
 
 Node IFNgR {
 
@@ -168,12 +210,16 @@ Node IFNgR {
 	rate_down = @logic ? 0.0 : $d_IFNgR;
 }
 
+// IL17 receptor. cytokine signature for Th17 (CD4 derived T cells). https://www.nextprot.org/entry/NX_Q16552/
+
 Node IL17R {
 
 	logic = (CD4 | CTL);
 	rate_up = @logic ? $u_IL17R : 0.0;
 	rate_down = @logic ? 0.0 : $d_IL17R;
 }
+
+// transofrming growth factor beta receptor. involved in promotion of Th17 and Tregs. activates SMAD2_3 complex (ICI model) https://www.nextprot.org/entry/NX_P01137/
 
 Node TGFbR {
 
@@ -182,13 +228,15 @@ Node TGFbR {
 	rate_down = @logic ? 0.0 : $d_TGFbR;
 }
 
-Node CXCR3 {
+// CXC chemokine receptor 3. binds with CXCL10 produced by tumor cells. it is expressed by naive T cells and enhance their activation and migration within the lymph nodes.
 
+Node CXCR3 { 
 	logic = ((!CD4 & CD8) | (CD4 & !CD8)) | (CXCR3);
 	rate_up = @logic ? $u_CXCR3 : 0.0;
 	rate_down = 0.0;
 }
 
+// CD28 (aka B7 receptor) receptor for CD80/86 provided by DCs. co-signaling molecules for priming of DCs with naive T cells. direct competitor with CTLA4 for their ligand. 
 
 Node CD28 {
 
@@ -197,12 +245,15 @@ Node CD28 {
 	rate_down = @logic ? 0.0 : $d_CD28;
 }
 
-Node CTLA4 {
+// cytotoxic T-lymphocyte–associated antigen 4. it competes against CD28 for CD80/CD86. negative regulator for immune response. regulates Tcells early proliferation in lymph nodes primairly.   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4892769/
 
+Node CTLA4 {
 	logic = (!Ca_NFAT & FOXP3 & !NFIL3 & CD80 & !anti_CTLA4) | (Ca_NFAT & !NFIL3 & CD80 & !anti_CTLA4); 
 	rate_up = @logic ? $u_CTLA4 : 0.0;
 	rate_down = @logic ? 0.0: $d_CTLA4;
 }
+
+// PD-1 suppresses T cells later in an immune response, primarily in peripheral tissues. same paper cited above. logic has been taken from ICI model (Kondratova et al. 2020)
 
 Node PD1 {
 
@@ -211,12 +262,15 @@ Node PD1 {
 	rate_down =@logic ? 0.0: $d_PD1;
 }
 
+// tumor necrosis factor receptor superfamily. it is expressed by cells during clonal expansion stage. Its ligands are present in TME. it has multiple functions (both costimulation and coinhibition) https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6289740/
+
 Node TNFRs {
   logic = (!NFkB & !MAPKs & !Ca_NFAT & !FOXP3 & AP1 & !NFIL3 & TNFRs_L) | (!NFkB & !MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & TNFRs_L) | (!NFkB & MAPKs & !Ca_NFAT & !NFIL3 & TNFRs_L) | (NFkB & !Ca_NFAT & !NFIL3 & TNFRs_L);
   rate_up = @logic ? $u_TNFRs : 0;
   rate_down = @logic ? 0 : $d_TNFRs;
 }
 
+// Tcell receptor expressed by CD8 T cells. binds with MHC-I molecules presented by DCs. the rule expressed in ICI model has been replaced with the rule we used in our previous ICD model.
 
 Node TCR_I {
 
@@ -225,12 +279,16 @@ Node TCR_I {
 	rate_down = @logic ? 0.0: $d_TCR_I;
 }
 
+// same as above but for CD4 Tcells.
+
 Node TCR_II {
 
 	logic = (CD4 & CD28 & !PD1);  // &(!SHP & LCK_FYN & CALR)
 	rate_up = @logic ? $u_TCR_II : 0.0;
 	rate_down = @logic ? 0.0: $d_TCR_II;
 }
+
+// CD226, adhesion molecule, promotes the migration, activation, proliferation, differentiation, and function of CD8 + T cell. its logic has to be revised since its function seems to be dependent by the context in which CTLs operate https://www.frontiersin.org/articles/10.3389/fcell.2020.00564/full
 
 Node CD226 {
   logic = (!TIGIT & TIGIT_L);
@@ -239,6 +297,9 @@ Node CD226 {
 }
 
 // Pathways
+
+
+
 
 Node Proliferation_Survival {
   logic = (PI3K_AKT & IL2R);
