@@ -93,6 +93,16 @@ Node CD4_Act {
 }
 
 
+
+
+
+
+
+
+
+
+
+
 // RECEPTORS
 
 
@@ -296,8 +306,18 @@ Node CD226 {
   rate_down = @logic ? 0 : $d_CD226;
 }
 
+
+
+
+
+
+
+
+
+
 // Pathways
 
+// Pathways implementation follows the merging of previous ICD model and the ICI model by Kondratova (2020). The overlap with our model was partial and there are still additional components whose permanence in the model is to be evaluated. Some nodes might be stacked in one nodes and this could reduce computational cost. 
 
 
 
@@ -307,11 +327,24 @@ Node Proliferation_Survival {
   rate_down = @logic ? 0 : $d_Proliferation_Survival;
 }
 
+
+
+
+
+
+
+
+// TRANSCRIPTION FACTORS
+
+// transcription factor for tissue-resident T cells mediating innate and adaptive immune response   https://www.uniprot.org/uniprot/O75626
+
 Node PRDM1 {
   logic = (STAT3);
   rate_up = @logic ? $u_PRDM1 : 0;
   rate_down = @logic ? 0 : $d_PRDM1;
 }
+
+// the transcription factors PRDM1 and c-MAF as cooperative regulators of the co-inhibitory module, and this was validated experimentally. https://pubmed.ncbi.nlm.nih.gov/29899446/
 
 Node MAF {
   logic = (STAT3);
@@ -319,11 +352,15 @@ Node MAF {
   rate_down = @logic ? 0 : $d_MAF;
 }
 
+// is essential for mediating responses to IL12 in lymphocytes, and regulating the differentiation of T helper cells. STAT family member. Involved in Th1 differentiation program and IL-23 signaling pathway.
+
 Node STAT4 {
   logic = (IL12R);
   rate_up = @logic ? $u_STAT4 : 0;
   rate_down = @logic ? 0 : $d_STAT4;
 }
+
+// NF-κB signaling is involved in both immune cell development and function, and it is critical in modulation of the immune response through the transcriptional regulation of cytokine and chemokine expression. https://www.nature.com/articles/s41577-018-0020-8
 
 Node NFkB {
   logic = (!LAT_complex & !PKC_teta & TRAFs) | (!LAT_complex & PKC_teta) | (LAT_complex);
@@ -331,11 +368,16 @@ Node NFkB {
   rate_down = @logic ? 0 : $d_NFkB;
 }
 
+// Mitogen-activated protein kinases included in the ICI model. Downstream to LAT-signalosome signaling activation https://pubmed.ncbi.nlm.nih.gov/29269020/
+
+
 Node MAPKs {
   logic = (!LAT_complex & !VAV & ICOS) | (!LAT_complex & VAV) | (LAT_complex);
   rate_up = @logic ? $u_MAPKs : 0;
   rate_down = @logic ? 0 : $d_MAPKs;
 }
+
+// Ca2+ NFAT complex activated by LAT-signalosome https://pubmed.ncbi.nlm.nih.gov/29269020/
 
 Node Ca_NFAT {
   logic = (!PLCG & ICOS & !LAG3) | (PLCG & !LAG3);
@@ -343,11 +385,15 @@ Node Ca_NFAT {
   rate_down = @logic ? 0 : $d_Ca_NFAT;
 }
 
+// upregulates the expression of Tbet through the glycogen synthase kinase-3 (GSK-3), which leads to the inhibition of PD1 expression https://pubmed.ncbi.nlm.nih.gov/18509048/
+
 Node PI3K_AKT {
   logic = (!CD28 & !LAT_complex & !ICOS & TRAFs & !PTEN & !PP2A & !SHIP) | (!CD28 & !LAT_complex & ICOS & !PTEN & !PP2A & !SHIP) | (!CD28 & LAT_complex & !PTEN & !PP2A & !SHIP) | (CD28 & !PTEN & !PP2A & !SHIP);
   rate_up = @logic ? $u_PI3K_AKT : 0;
   rate_down = @logic ? 0 : $d_PI3K_AKT;
 }
+
+//  IL12 and IFNG upregulate the expression of Tbet via signal transducer and activator of transcription 4 (STAT4) and STAT1 - source ICI Kondratova model  
 
 Node Tbet {
   logic = (!STAT1 & !GSK3) | (!STAT1 & GSK3 & STAT4) | (STAT1);
@@ -355,11 +401,15 @@ Node Tbet {
   rate_down = @logic ? 0 : $d_Tbet;
 }
 
+// transcription factor for immunosuppressive phenotypes  https://pubmed.ncbi.nlm.nih.gov/18509048/
+
 Node FOXP3 {
   logic = (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & !STAT1 & SMAD2_3 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & STAT1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & AP1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & FOXO1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & Ca_NFAT & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & MAPKs & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & NFkB & !PI3K_AKT & !STAT3 & !NFIL3) | (CTLA4 & !PI3K_AKT & !STAT3 & !NFIL3);
   rate_up = @logic ? $u_FOXP3 : 0;
   rate_down = @logic ? 0 : $d_FOXP3;
 }
+
+// FOXO1, another key transcription factor of Treg development, is especially important for the differentiation of iTregs https://pubmed.ncbi.nlm.nih.gov/26363058/  https://pubmed.ncbi.nlm.nih.gov/21167754/
 
 Node FOXO1 {
   logic = (!PI3K_AKT);
@@ -367,6 +417,7 @@ Node FOXO1 {
   rate_down = @logic ? 0 : $d_FOXO1;
 }
 
+// LAT is a 36-kD transmembrane protein that becomes rapidly tyrosine-phosphorylated after TCR engagement.  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4646300/
 
 Node LAT_complex {
   logic = (TCR_I | TCR_II);
@@ -374,11 +425,15 @@ Node LAT_complex {
   rate_down = @logic ? 0 : $d_LAT_complex;
 }
 
+// Couples tyrosine kinase signals with the activation of the Rho/Rac GTPases, thus leading to cell differentiation and/or proliferation. https://pubmed.ncbi.nlm.nih.gov/16905544/
+
 Node VAV {
   logic = (!GRB2 & CD226) | (GRB2);
   rate_up = @logic ? $u_VAV : 0;
   rate_down = @logic ? 0 : $d_VAV;
 }
+
+// PLCG, phospholipase C gamma is a downstream effector activated by LAT complex and controls regulation of intracellular signaling cascades. https://www.ncbi.nlm.nih.gov/gene?Db=gene&Cmd=DetailsSearch&Term=5335
 
 Node PLCG {
   logic = (LAT_complex);
@@ -386,11 +441,22 @@ Node PLCG {
   rate_down = @logic ? 0 : $d_PLCG;
 }
 
+// protein Kinase C-theta (PKC-θ) is instrumental for the formation of signaling complexes, which ultimately lead to a transcriptional network in T cells. https://www.frontiersin.org/articles/10.3389/fimmu.2015.00530/full
+
 Node PKC_teta {
   logic = (VAV);
   rate_up = @logic ? $u_PKC_teta : 0;
   rate_down = @logic ? 0 : $d_PKC_teta;
 }
+
+
+
+
+// CHECKPOINTS
+
+
+
+// T cell immunoglobulin and mucin domain-containing protein 3: INHIBITING IMMUNE CHECKPOINTS
 
 Node TIM3 {
   logic = (!Tbet & !NFIL3 & TIM3_L & !PRDM1 & MAF) | (!Tbet & !NFIL3 & TIM3_L & PRDM1) | (!Tbet & NFIL3 & TIM3_L) | (Tbet & TIM3_L);
@@ -398,17 +464,24 @@ Node TIM3 {
   rate_down = @logic ? 0 : $d_TIM3;
 }
 
+//
+
 Node TIGIT {
   logic = (!FOXP3 & TIGIT_L & !PRDM1 & MAF) | (!FOXP3 & TIGIT_L & PRDM1) | (FOXP3 & TIGIT_L);
   rate_up = @logic ? $u_TIGIT : 0;
   rate_down = @logic ? 0 : $d_TIGIT;
 }
 
+// activating immune checkpoint
+
 Node ICOS {
   logic = (!MAPKs & !Ca_NFAT & !FOXP3 & !NFAT & !NFIL3 & ICOS_L & PRDM1) | (!MAPKs & !Ca_NFAT & !FOXP3 & NFAT & !NFIL3 & ICOS_L) | (!MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & ICOS_L) | (!MAPKs & Ca_NFAT & !NFIL3 & ICOS_L) | (MAPKs & !NFIL3 & ICOS_L);
   rate_up = @logic ? $u_ICOS : 0;
   rate_down = @logic ? 0 : $d_ICOS;
 }
+
+
+// superfamily of receptors for TNFRs; behaves as an activating immune checkpoint.
 
 Node TRAFs {
   logic = (TNFRs);
@@ -518,6 +591,8 @@ Node GSK3 {
   rate_down = @logic ? 0 : $d_GSK3;
 }
 
+
+
 // Cell types
 
 Node Th1 {
@@ -551,6 +626,14 @@ Node Treg {
 }
 
 
+
+
+
+// Ligands
+
+//________DAMPs________
+
+
 Node CALR {
 
 	logic = (DyingTumor);
@@ -579,12 +662,22 @@ Node HMGB1 {
 	rate_down = @logic ? 0.0 : $d_HMGB1;
 }
 
+
+
 Node CXCL10 {
 
 	logic = (Tumor & IFN1R);
 	rate_up = @logic ? $u_CXCL10 : 0.0;
 	rate_down = @logic ? 0.0 : $d_CXCL10;
 }
+
+
+
+
+
+//_____Checkpoints Ligands_____
+
+// inhibiting:
 
 Node LAG3_L {
   logic = (LAG3_L);
@@ -611,6 +704,9 @@ Node PD_L1 {
 	rate_down = @logic ? 0.0 : $d_PD_L1;
 }
 
+
+// activating:
+
 Node TNFRs_L {
   logic = (TNFRs_L);
   rate_up = @logic ? $u_TNFRs_L : 0;
@@ -622,6 +718,9 @@ Node ICOS_L {
   rate_up = @logic ? $u_ICOS_L : 0;
   rate_down = @logic ? 0 : $d_ICOS_L;
 }
+
+
+// dendritic cells specific ligands:
 
 Node CD80 {
 
