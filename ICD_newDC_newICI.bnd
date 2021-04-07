@@ -352,6 +352,18 @@ Node MAF {
   rate_down = @logic ? 0 : $d_MAF;
 }
 
+Node STAT1 {
+  logic = (!IFNgR & IL27R) | (IFNgR);
+  rate_up = @logic ? $u_STAT1 : 0;
+  rate_down = @logic ? 0 : $d_STAT1;
+}
+
+Node STAT3 {
+  logic = (IL27R);
+  rate_up = @logic ? $u_STAT3 : 0;
+  rate_down = @logic ? 0 : $d_STAT3;
+}
+
 // is essential for mediating responses to IL12 in lymphocytes, and regulating the differentiation of T helper cells. STAT family member. Involved in Th1 differentiation program and IL-23 signaling pathway.
 
 Node STAT4 {
@@ -454,9 +466,18 @@ Node PKC_teta {
 
 // CHECKPOINTS
 
+//_____inhibiting immune checkpoints_____
 
 
-// T cell immunoglobulin and mucin domain-containing protein 3: INHIBITING IMMUNE CHECKPOINTS
+
+Node LAG3 {
+  logic = (!Tbet & !YY1 & !LAG3_L & MHC_II & !PRDM1 & MAF) | (!Tbet & !YY1 & !LAG3_L & MHC_II & PRDM1) | (!Tbet & !YY1 & LAG3_L & !PRDM1 & MAF) | (!Tbet & !YY1 & LAG3_L & PRDM1) | (!Tbet & YY1 & !LAG3_L & MHC_II) | (!Tbet & YY1 & LAG3_L);
+  rate_up = @logic ? $u_LAG3 : 0;
+  rate_down = @logic ? 0 : $d_LAG3;
+}
+
+
+// T cell immunoglobulin and mucin domain-containing protein 3
 
 Node TIM3 {
   logic = (!Tbet & !NFIL3 & TIM3_L & !PRDM1 & MAF) | (!Tbet & !NFIL3 & TIM3_L & PRDM1) | (!Tbet & NFIL3 & TIM3_L) | (Tbet & TIM3_L);
@@ -472,7 +493,9 @@ Node TIGIT {
   rate_down = @logic ? 0 : $d_TIGIT;
 }
 
-// activating immune checkpoint
+
+
+//_____activating immune checkpoint______
 
 Node ICOS {
   logic = (!MAPKs & !Ca_NFAT & !FOXP3 & !NFAT & !NFIL3 & ICOS_L & PRDM1) | (!MAPKs & !Ca_NFAT & !FOXP3 & NFAT & !NFIL3 & ICOS_L) | (!MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & ICOS_L) | (!MAPKs & Ca_NFAT & !NFIL3 & ICOS_L) | (MAPKs & !NFIL3 & ICOS_L);
@@ -489,11 +512,22 @@ Node TRAFs {
   rate_down = @logic ? 0 : $d_TRAFs;
 }
 
+
+
+
+
+
+
+// Wnt and NF-κB pathways as two key signal transduction pathways that are regulated by CK2 activity, in embryonic development and in cancer. These results suggest that inhibiting CK2 could be useful in treating cancer  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3905806/
+
+
 Node CK2 {
   logic = (!PD1);
   rate_up = @logic ? $u_CK2 : 0;
   rate_down = @logic ? 0 : $d_CK2;
 }
+
+// PTEN is a negative regulator of a major cell growth and survival signaling pathway, namely the phosphatidylinositol-3-kinase (PI3K)/AKT signaling pathway  https://www.frontiersin.org/articles/10.3389/fendo.2018.00338/full
 
 Node PTEN {
   logic = (!CK2);
@@ -501,11 +535,15 @@ Node PTEN {
   rate_down = @logic ? 0 : $d_PTEN;
 }
 
+// Protein phosphatase 2A (PP2A) plays a critical multi-faceted role in the regulation of the cell cycle.  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4905575/
+
 Node PP2A {
   logic = (CTLA4);
   rate_up = @logic ? $u_PP2A : 0;
   rate_down = @logic ? 0 : $d_PP2A;
 }
+
+// The established paradigm emphasizes SHIP's inhibitory receptor-dependent function in regulating PI3K  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3569986/
 
 Node SHIP {
   logic = (TIGIT);
@@ -513,17 +551,15 @@ Node SHIP {
   rate_down = @logic ? 0 : $d_SHIP;
 }
 
+// PD1 activates SHP which results into initiating T cell inactivation  https://advances.sciencemag.org/content/6/5/eaay4458
+
 Node SHP {
   logic = (PD1);
   rate_up = @logic ? $u_SHP : 0;
   rate_down = @logic ? 0 : $d_SHP;
 }
 
-Node LAG3 {
-  logic = (!Tbet & !YY1 & !LAG3_L & MHC_II & !PRDM1 & MAF) | (!Tbet & !YY1 & !LAG3_L & MHC_II & PRDM1) | (!Tbet & !YY1 & LAG3_L & !PRDM1 & MAF) | (!Tbet & !YY1 & LAG3_L & PRDM1) | (!Tbet & YY1 & !LAG3_L & MHC_II) | (!Tbet & YY1 & LAG3_L);
-  rate_up = @logic ? $u_LAG3 : 0;
-  rate_down = @logic ? 0 : $d_LAG3;
-}
+// The dimeric transcription factor complex Activator Protein-1 (AP-1) is a group of proteins involved in a wide array of cell processes and a critical regulator of nuclear gene expression during T-cell activation. It is also one of the downstream targets of the MAPK signaling cascade  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6678392/
 
 Node AP1 {
   logic = (MAPKs);
@@ -531,11 +567,15 @@ Node AP1 {
   rate_down = @logic ? 0 : $d_AP1;
 }
 
+// YY1 is shown to positively regulate the checkpoint receptors PD1, Lag3, and Tim3 and to negatively regulate the type I cytokines interleukin-2 (IL-2) (in collaboration with Ezh2 histone methyltransferase) and interferon gamma (IFN-γ)  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6136936/
+
 Node YY1 {
   logic = (MAPKs);
   rate_up = @logic ? $u_YY1 : 0;
   rate_down = @logic ? 0 : $d_YY1;
 }
+
+// NFAT partecipate to the activation of IL2 production and differentiation of CTLs https://www.nature.com/articles/nri1632
 
 Node NFAT {
   logic = (Ca_NFAT & !GSK3);
@@ -543,17 +583,15 @@ Node NFAT {
   rate_down = @logic ? 0 : $d_NFAT;
 }
 
+//  Animal models and cell line studies both indicate a critical role for Lck and Fyn in proximal T-cell antigen receptor (TCR) signal transduction   https://www.nature.com/articles/1208074
+
 Node LCK_FYN {
   logic = (!TIM3 & CD8) | (CD4 & !TIM3);
   rate_up = @logic ? $u_LCK_FYN : 0;
   rate_down = @logic ? 0 : $d_LCK_FYN;
 }
 
-Node STAT1 {
-  logic = (!IFNgR & IL27R) | (IFNgR);
-  rate_up = @logic ? $u_STAT1 : 0;
-  rate_down = @logic ? 0 : $d_STAT1;
-}
+// Smad2 and Smad3 are redundantly essential for TGF-beta-mediated induction of Foxp3-expressing regulatory T cells and suppression of IFN-gamma production in CD4(+) T cells   https://pubmed.ncbi.nlm.nih.gov/20548029/
 
 Node SMAD2_3 {
   logic = (TGFbR & !SMAD7);
@@ -561,17 +599,15 @@ Node SMAD2_3 {
   rate_down = @logic ? 0 : $d_SMAD2_3;
 }
 
+// SMAD7 is inhibited by FOXP3 expressing CD4+ T cells https://www.jimmunol.org/content/172/9/5149.long
+
 Node SMAD7 {
   logic = (!FOXP3);
   rate_up = @logic ? $u_SMAD7 : 0;
   rate_down = @logic ? 0 : $d_SMAD7;
 }
 
-Node STAT3 {
-  logic = (IL27R);
-  rate_up = @logic ? $u_STAT3 : 0;
-  rate_down = @logic ? 0 : $d_STAT3;
-}
+// We discovered that NFIL3 directly binds to and negatively regulates the expression of Foxp3  https://www.nature.com/articles/s12276-019-0280-9
 
 Node NFIL3 {
   logic = (!SMAD2_3 & STAT3);
@@ -579,11 +615,15 @@ Node NFIL3 {
   rate_down = @logic ? 0 : $d_NFIL3;
 }
 
+//  GRB2 regulates signaling downstream of adaptors and receptors by both recruiting effector proteins and regulating the formation of signaling complexes https://www.frontiersin.org/articles/10.3389/fimmu.2015.00141/full 
+
 Node GRB2 {
-  logic = (CD28);
+  logic = (CD28); 
   rate_up = @logic ? $u_GRB2 : 0;
   rate_down = @logic ? 0 : $d_GRB2;
 }
+
+// The seminal finding that GSK3 beta controls PDL1 levels indicates a possible effect of GSK3 beta inhibition on the immune reaction against tumors https://www.frontiersin.org/articles/10.3389/fonc.2020.01221/full
 
 Node GSK3 {
   logic = (!PI3K_AKT);
@@ -593,7 +633,7 @@ Node GSK3 {
 
 
 
-// Cell types
+//_____T Cell types_____
 
 Node Th1 {
 
@@ -625,7 +665,19 @@ Node Treg {
 	rate_down = 0.0;
 }
 
+Node preCTL {
 
+	logic = (IL2R & CD8 & TCR_I);
+	rate_up = @logic ? $u_preCTL : 0.0;
+	rate_down = 0.0;
+}
+
+Node CTL {
+
+	logic = ((IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
+	rate_up = @logic ? $u_CTL : 0.0;
+	rate_down = 0 ;
+}
 
 
 
@@ -679,11 +731,15 @@ Node CXCL10 {
 
 // inhibiting:
 
+// https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4696019/
+
+
 Node LAG3_L {
   logic = (LAG3_L);
   rate_up = @logic ? $u_LAG3_L : 0;
   rate_down = @logic ? 0 : $d_LAG3_L;
 }
+
 
 Node TIM3_L {
   logic = (TIM3_L);
@@ -742,6 +798,10 @@ Node MHC_II {
 	rate_up = @logic ? $u_MHC_II : 0.0;
 	rate_down = @logic ? 0.0 : $d_MHC_II;
 }
+
+
+
+// interleukins
 
 Node IL1B {
 	
@@ -823,19 +883,7 @@ Node Perforin {
 }
 
 
-Node preCTL {
 
-	logic = (IL2R & CD8 & TCR_I);
-	rate_up = @logic ? $u_preCTL : 0.0;
-	rate_down = 0.0;
-}
-
-Node CTL {
-
-	logic = ((IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
-	rate_up = @logic ? $u_CTL : 0.0;
-	rate_down = 0 ;
-}
 
 Node IFN1 {
 
