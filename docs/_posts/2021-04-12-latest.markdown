@@ -1,0 +1,15 @@
+---
+layout: post
+title:  "Latest model is still stable"
+date:   2021-04-12 15:45:24 +0200
+---
+Simulations run on Curie clusters revealed the stability of the model according to several pseudorandom seeds.
+
+{% highlight ruby %}
+pseudo_random
+{% endhighlight %}
+
+[Expression]({{ site.url }}~/assets/images/seeds.pdf)
+
+
+	

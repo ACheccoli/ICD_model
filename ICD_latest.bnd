@@ -1,0 +1,1008 @@
+// from ICD_2020
+Node Tumor {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// from ICD_2020, needs to be tailored according to different therapies we're going to test
+Node ChemoT {
+    rate_up = 0.0;
+    rate_down = $degChemo;
+}
+
+//adjuvant therapy for boosting immune response, apparently less influential then anti_PD1
+// anti_CTLA4 is supposed to avoid the CTL population to be suppressed by Treg effects.
+Node anti_CTLA4 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+//adjuvant therapy for boosting immune response counteracting the immune suppression mediated by Tregs
+Node anti_PD1 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// from ICD_2020, state of tumor cells
+Node DyingTumor {
+    rate_up = (Tumor & ChemoT) ? $effectChemo : 0.0 ;
+    rate_down = 0.0 ;
+}
+
+// FOR ALL DENDRITIC CELLS WE MAY REFER TO https://www.nature.com/articles/s41577-019-0210-z/tables/1
+
+// conventional DC type 1 subpopulation https://www.nature.com/articles/s41586-020-2611-3
+Node cDC1 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// conventional DC type 2 subpopulation https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5904714/
+Node cDC2 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// monocyte-derived DC subpopulation https://www.nature.com/articles/s41577-019-0210-z?utm_source=nri_etoc&utm_medium=email&utm_campaign=toc_41577_20_1&utm_content=20200102&WT.ec_id=NRI-201901&sap-outbound-id=9792D00B6B344538D5AD359ADF15A2743DFBE00C&mkt-key=005056B0331B1EE88A9278F4778DE352
+
+Node moDC {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// plasmacytoid DC subpopulation: same article cited above
+
+Node pDC {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// naive CD4 T cells
+
+Node CD4 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// naive CD8 T cells
+
+Node CD8 {
+	rate_up = 0.0;
+	rate_down = 0.0;
+}
+
+// active state for cDC1: enables production of ligands and expression of receptors
+Node a_cDC1 {
+	logic = (cDC1 &  P2X7R);
+	rate_up = @logic ? $u_a_cDC1 : 0.0;
+	rate_down = 0.0;
+}
+
+// active state for cDC1: enables production of ligands and expression of receptors
+Node a_cDC2 {
+	logic = (cDC2 &  P2X7R);
+	rate_up = @logic ? $u_a_cDC2 : 0.0;
+	rate_down = 0.0;
+}
+
+// active state for CD4 T cells, follows stimulation of different interleukins
+Node CD4_Act {
+	logic = (( IL2R | IL4R | (CD28 & TCR_II)) & CD4);
+	rate_up = @logic ? $u_CD4_Act : 0.0;
+	rate_down = @logic ? 0.0 : 0.0; // no activation stop stop 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// RECEPTORS
+
+
+
+// purinergic receptor of DCs - PRRs
+Node P2Y2R {
+	logic = (cDC1 | cDC2);
+	rate_up = @logic ? $u_P2Y2R : 0.0;
+	rate_down = 0.0;
+}
+
+// purinergic receptor of DCs - PRRs. we assume this receptor is expressed by both cDC
+Node P2X7R {
+
+	logic = ((cDC1 | cDC2) & P2Y2R);
+	rate_up = @logic ? $u_P2X7R : 0.0;
+	rate_down = 0.0;
+}
+
+// Formyl peptide receptor 1. its ligand is ANXA1. apparently this FPR1/ANXA1 axis may enhance aggresiveness of tumor https://pubmed.ncbi.nlm.nih.gov/29932988/;
+Node FPR1 {
+
+	logic = (a_cDC1 | a_cDC2);
+	rate_up = @logic ? $u_FPR1 : 0.0;
+	rate_down = 0.0;
+}
+
+// receptor expressed by cDC. it binds zith CALR
+Node LRP1 {
+
+	logic = ((cDC1 | cDC2) & FPR1);
+	rate_up = @logic ? $u_LRP1 : 0.0;
+	rate_down = 0.0;
+}
+
+// receptor expressed by cDC1 hi, cDC2 low
+Node TLR4 {
+	logic = ((a_cDC1 | a_cDC2) & LRP1 & FPR1);
+	rate_up = @logic ? $u_TLR4 : 0.0;
+	rate_down = 0.0;
+}
+
+// type 1 interferon receptor (new name will be IFNAR) possibly we will consider also the fact that this receptor is also expressed by T cells and works as costimulatory mechanism for priming antitumor immunity .
+
+Node IFN1R {
+	logic = (Tumor); 
+	rate_up = @logic ? $u_IFN1R : 0.0;
+	rate_down = 0.0;
+}
+
+// receptor for interleukin that mediates the production of IFN gamma; https://pubmed.ncbi.nlm.nih.gov/10653850/
+Node IL1BR {
+	logic = (CD4);
+	rate_up = @logic ? $u_IL1BR : 0.0;
+	rate_down = @logic ? 0.0 : 0.0;
+}
+
+// receptor for IL2, drives CD4 and CD8 differentiation processes
+Node IL2R {
+
+	logic = (CD8) | (CD4);
+	rate_up = @logic ? $u_IL2R : 0.0;
+	rate_down = @logic ? 0.0 : 0.0;
+}
+
+// receptor for IL4, drives the differentiation of Th2 cells and enable the active status of naive CD4
+
+Node IL4R {
+
+	logic = CD4 | Th2;
+	rate_up = @logic ? $u_IL4R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL4R;
+}
+
+// receptor for IL6, drives maturation of Th17 cells
+Node IL6R {
+
+	logic = CD4 | Th17;
+	rate_up = @logic ? $u_IL6R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL6R;
+}
+
+// receptor for IL10, dirves maturation of Tregs
+Node IL10R {
+
+	logic =  (CD4);
+	rate_up = @logic ? $u_IL10R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL10R;
+}
+
+// receptor for IL12, drives maturation of preCTL and Th1 through the production of IFNgamma and activating STAT4 TF.
+
+Node IL12R {
+
+	logic = (CD4 & !CD8) | (Th1 & !CD8);
+	rate_up = @logic ? $u_IL12R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL12R;
+}
+
+// receptor for IL27 which enhance the production of IFNgamma (synergiwing with IL12)by CD4 Tcells. It activates STAT1, STAT3 and Tregs differentiation https://www.genecards.org/cgi-bin/carddisp.pl?gene=IL27
+
+Node IL27R {
+
+	logic = (CD4);
+	rate_up = @logic ? $u_IL27R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL27R;
+}
+
+// IFNgamma receptor. expressed by CD4 or CD8 Tcells, activates STAT1 TF, drives maturation of T regs and CTL, it also enhance PD_L1 production.
+
+Node IFNgR {
+
+	logic = ((CD8 & !CD4)|(!CD8 & CD4));
+	rate_up = @logic ? $u_IFNgR : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFNgR;
+}
+
+// IL17 receptor. cytokine signature for Th17 (CD4 derived T cells). https://www.nextprot.org/entry/NX_Q16552/
+
+Node IL17R {
+
+	logic = (CD4 | CTL);
+	rate_up = @logic ? $u_IL17R : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL17R;
+}
+
+// transofrming growth factor beta receptor. involved in promotion of Th17 and Tregs. activates SMAD2_3 complex (ICI model) https://www.nextprot.org/entry/NX_P01137/
+
+Node TGFbR {
+
+	logic = (CD4);
+	rate_up = @logic ? $u_TGFbR : 0.0;
+	rate_down = @logic ? 0.0 : $d_TGFbR;
+}
+
+// CXC chemokine receptor 3. binds with CXCL10 produced by tumor cells. it is expressed by naive T cells and enhance their activation and migration within the lymph nodes.
+
+Node CXCR3 { 
+	logic = ((!CD4 & CD8) | (CD4 & !CD8)) | (CXCR3);
+	rate_up = @logic ? $u_CXCR3 : 0.0;
+	rate_down = 0.0;
+}
+
+// CD28 (aka B7 receptor) receptor for CD80/86 provided by DCs. co-signaling molecules for priming of DCs with naive T cells. direct competitor with CTLA4 for their ligand. 
+
+Node CD28 {
+
+	logic = (((!CD4 & CD8) | (CD4 & !CD8)) & CXCR3 & !CTLA4 & !PD1 & !SHP) | (CD28 & (!CTLA4 | !PD1) & !SHP); 
+	rate_up = @logic ? $u_CD28 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CD28;
+}
+
+// cytotoxic T-lymphocyte–associated antigen 4. it competes against CD28 for CD80/CD86. negative regulator for immune response. regulates Tcells early proliferation in lymph nodes primairly.   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4892769/
+
+Node CTLA4 {
+	logic = (!Ca_NFAT & FOXP3 & !NFIL3 & CD80 & !anti_CTLA4) | (Ca_NFAT & !NFIL3 & CD80 & !anti_CTLA4); 
+	rate_up = @logic ? $u_CTLA4 : 0.0;
+	rate_down = @logic ? 0.0: $d_CTLA4;
+}
+
+// PD-1 suppresses T cells later in an immune response, primarily in peripheral tissues. same paper cited above. logic has been taken from ICI model (Kondratova et al. 2020)
+
+Node PD1 {
+
+	logic = (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & !NFAT & PD_L1 & !PRDM1 & MAF) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & !NFAT & PD_L1 & PRDM1) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & !YY1 & NFAT & PD_L1) | (!Ca_NFAT & !Tbet & !FOXO1 & !AP1 & YY1 & PD_L1) | (!Ca_NFAT & !Tbet & !FOXO1 & AP1 & PD_L1) | (!Ca_NFAT & !Tbet & FOXO1 & PD_L1) | (Ca_NFAT & !Tbet & PD_L1); 
+	rate_up = @logic ? $u_PD1 : 0.0;
+	rate_down =@logic ? 0.0: $d_PD1;
+}
+
+// tumor necrosis factor receptor superfamily. it is expressed by cells during clonal expansion stage. Its ligands are present in TME. it has multiple functions (both costimulation and coinhibition) https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6289740/
+
+Node TNFRs {
+  logic = (!NFkB & !MAPKs & !Ca_NFAT & !FOXP3 & AP1 & !NFIL3 & TNFRs_L) | (!NFkB & !MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & TNFRs_L) | (!NFkB & MAPKs & !Ca_NFAT & !NFIL3 & TNFRs_L) | (NFkB & !Ca_NFAT & !NFIL3 & TNFRs_L);
+  rate_up = @logic ? $u_TNFRs : 0;
+  rate_down = @logic ? 0 : $d_TNFRs;
+}
+
+// Tcell receptor expressed by CD8 T cells. binds with MHC-I molecules presented by DCs. the rule expressed in ICI model has been replaced with the rule we used in our previous ICD model.
+
+Node TCR_I {
+
+	logic = (CD28 & CD8 & !CTLA4 & !PD1)  ; // &(!SHP & LCK_FYN & CALR)
+	rate_up = @logic ? $u_TCR_I : 0.0;
+	rate_down = @logic ? 0.0: $d_TCR_I;
+}
+
+// same as above but for CD4 Tcells.
+
+Node TCR_II {
+
+	logic = (CD4 & CD28 & !PD1);  // &(!SHP & LCK_FYN & CALR)
+	rate_up = @logic ? $u_TCR_II : 0.0;
+	rate_down = @logic ? 0.0: $d_TCR_II;
+}
+
+// CD226, adhesion molecule, promotes the migration, activation, proliferation, differentiation, and function of CD8 + T cell. its logic has to be revised since its function seems to be dependent by the context in which CTLs operate https://www.frontiersin.org/articles/10.3389/fcell.2020.00564/full
+
+Node CD226 {
+  logic = (!TIGIT & TIGIT_L);
+  rate_up = @logic ? $u_CD226 : 0;
+  rate_down = @logic ? 0 : $d_CD226;
+}
+
+
+
+
+
+
+
+
+
+
+// Pathways
+
+// Pathways implementation follows the merging of previous ICD model and the ICI model by Kondratova (2020). The overlap with our model was partial and there are still additional components whose permanence in the model is to be evaluated. Some nodes might be stacked in one nodes and this could reduce computational cost. 
+
+
+
+Node Proliferation_Survival {
+  logic = (PI3K_AKT & IL2R);
+  rate_up = @logic ? $u_Proliferation_Survival : 0;
+  rate_down = @logic ? 0 : $d_Proliferation_Survival;
+}
+
+
+
+
+
+
+
+
+// TRANSCRIPTION FACTORS
+
+// transcription factor for tissue-resident T cells mediating innate and adaptive immune response   https://www.uniprot.org/uniprot/O75626
+
+Node PRDM1 {
+  logic = (STAT3);
+  rate_up = @logic ? $u_PRDM1 : 0;
+  rate_down = @logic ? 0 : $d_PRDM1;
+}
+
+// the transcription factors PRDM1 and c-MAF as cooperative regulators of the co-inhibitory module, and this was validated experimentally. https://pubmed.ncbi.nlm.nih.gov/29899446/
+
+Node MAF {
+  logic = (STAT3);
+  rate_up = @logic ? $u_MAF : 0;
+  rate_down = @logic ? 0 : $d_MAF;
+}
+
+Node STAT1 {
+  logic = (!IFNgR & IL27R) | (IFNgR);
+  rate_up = @logic ? $u_STAT1 : 0;
+  rate_down = @logic ? 0 : $d_STAT1;
+}
+
+Node STAT3 {
+  logic = (IL27R);
+  rate_up = @logic ? $u_STAT3 : 0;
+  rate_down = @logic ? 0 : $d_STAT3;
+}
+
+// is essential for mediating responses to IL12 in lymphocytes, and regulating the differentiation of T helper cells. STAT family member. Involved in Th1 differentiation program and IL-23 signaling pathway.
+
+Node STAT4 {
+  logic = (IL12R);
+  rate_up = @logic ? $u_STAT4 : 0;
+  rate_down = @logic ? 0 : $d_STAT4;
+}
+
+// NF-κB signaling is involved in both immune cell development and function, and it is critical in modulation of the immune response through the transcriptional regulation of cytokine and chemokine expression. https://www.nature.com/articles/s41577-018-0020-8
+
+Node NFkB {
+  logic = (!LAT_complex & !PKC_teta & TRAFs) | (!LAT_complex & PKC_teta) | (LAT_complex);
+  rate_up = @logic ? $u_NFkB : 0;
+  rate_down = @logic ? 0 : $d_NFkB;
+}
+
+// Mitogen-activated protein kinases included in the ICI model. Downstream to LAT-signalosome signaling activation https://pubmed.ncbi.nlm.nih.gov/29269020/
+
+
+Node MAPKs {
+  logic = (!LAT_complex & !VAV & ICOS) | (!LAT_complex & VAV) | (LAT_complex);
+  rate_up = @logic ? $u_MAPKs : 0;
+  rate_down = @logic ? 0 : $d_MAPKs;
+}
+
+// Ca2+ NFAT complex activated by LAT-signalosome https://pubmed.ncbi.nlm.nih.gov/29269020/
+
+Node Ca_NFAT {
+  logic = (!PLCG & ICOS & !LAG3) | (PLCG & !LAG3);
+  rate_up = @logic ? $u_Ca_NFAT : 0;
+  rate_down = @logic ? 0 : $d_Ca_NFAT;
+}
+
+// upregulates the expression of Tbet through the glycogen synthase kinase-3 (GSK-3), which leads to the inhibition of PD1 expression https://pubmed.ncbi.nlm.nih.gov/18509048/
+
+Node PI3K_AKT {
+  logic = (!CD28 & !LAT_complex & !ICOS & TRAFs & !PTEN & !PP2A & !SHIP) | (!CD28 & !LAT_complex & ICOS & !PTEN & !PP2A & !SHIP) | (!CD28 & LAT_complex & !PTEN & !PP2A & !SHIP) | (CD28 & !PTEN & !PP2A & !SHIP);
+  rate_up = @logic ? $u_PI3K_AKT : 0;
+  rate_down = @logic ? 0 : $d_PI3K_AKT;
+}
+
+//  IL12 and IFNG upregulate the expression of Tbet via signal transducer and activator of transcription 4 (STAT4) and STAT1 - source ICI Kondratova model  
+
+Node Tbet {
+  logic = (!STAT1 & !GSK3) | (!STAT1 & GSK3 & STAT4) | (STAT1);
+  rate_up = @logic ? $u_Tbet : 0;
+  rate_down = @logic ? 0 : $d_Tbet;
+}
+
+// transcription factor for immunosuppressive phenotypes  https://pubmed.ncbi.nlm.nih.gov/18509048/
+
+Node FOXP3 {
+  logic = (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & !STAT1 & SMAD2_3 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & !AP1 & STAT1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & !FOXO1 & AP1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & !Ca_NFAT & !PI3K_AKT & FOXO1 & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & !MAPKs & Ca_NFAT & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & !NFkB & MAPKs & !PI3K_AKT & !STAT3 & !NFIL3) | (!CTLA4 & NFkB & !PI3K_AKT & !STAT3 & !NFIL3) | (CTLA4 & !PI3K_AKT & !STAT3 & !NFIL3);
+  rate_up = @logic ? $u_FOXP3 : 0;
+  rate_down = @logic ? 0 : $d_FOXP3;
+}
+
+// FOXO1, another key transcription factor of Treg development, is especially important for the differentiation of iTregs https://pubmed.ncbi.nlm.nih.gov/26363058/  https://pubmed.ncbi.nlm.nih.gov/21167754/
+
+Node FOXO1 {
+  logic = (!PI3K_AKT);
+  rate_up = @logic ? $u_FOXO1 : 0;
+  rate_down = @logic ? 0 : $d_FOXO1;
+}
+
+// LAT is a 36-kD transmembrane protein that becomes rapidly tyrosine-phosphorylated after TCR engagement.  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4646300/
+
+Node LAT_complex {
+  logic = (TCR_I | TCR_II);
+  rate_up = @logic ? $u_LAT_complex : 0;
+  rate_down = @logic ? 0 : $d_LAT_complex;
+}
+
+// Couples tyrosine kinase signals with the activation of the Rho/Rac GTPases, thus leading to cell differentiation and/or proliferation. https://pubmed.ncbi.nlm.nih.gov/16905544/
+
+Node VAV {
+  logic = (!GRB2 & CD226) | (GRB2);
+  rate_up = @logic ? $u_VAV : 0;
+  rate_down = @logic ? 0 : $d_VAV;
+}
+
+// PLCG, phospholipase C gamma is a downstream effector activated by LAT complex and controls regulation of intracellular signaling cascades. https://www.ncbi.nlm.nih.gov/gene?Db=gene&Cmd=DetailsSearch&Term=5335
+
+Node PLCG {
+  logic = (LAT_complex);
+  rate_up = @logic ? $u_PLCG : 0;
+  rate_down = @logic ? 0 : $d_PLCG;
+}
+
+// protein Kinase C-theta (PKC-θ) is instrumental for the formation of signaling complexes, which ultimately lead to a transcriptional network in T cells. https://www.frontiersin.org/articles/10.3389/fimmu.2015.00530/full
+
+Node PKC_teta {
+  logic = (VAV);
+  rate_up = @logic ? $u_PKC_teta : 0;
+  rate_down = @logic ? 0 : $d_PKC_teta;
+}
+
+
+
+
+// CHECKPOINTS
+
+//_____inhibiting immune checkpoints_____
+
+
+
+Node LAG3 {
+  logic = (!Tbet & !YY1 & !LAG3_L & MHC_II & !PRDM1 & MAF) | (!Tbet & !YY1 & !LAG3_L & MHC_II & PRDM1) | (!Tbet & !YY1 & LAG3_L & !PRDM1 & MAF) | (!Tbet & !YY1 & LAG3_L & PRDM1) | (!Tbet & YY1 & !LAG3_L & MHC_II) | (!Tbet & YY1 & LAG3_L);
+  rate_up = @logic ? $u_LAG3 : 0;
+  rate_down = @logic ? 0 : $d_LAG3;
+}
+
+
+// T cell immunoglobulin and mucin domain-containing protein 3
+
+Node TIM3 {
+  logic = (!Tbet & !NFIL3 & TIM3_L & !PRDM1 & MAF) | (!Tbet & !NFIL3 & TIM3_L & PRDM1) | (!Tbet & NFIL3 & TIM3_L) | (Tbet & TIM3_L);
+  rate_up = @logic ? $u_TIM3 : 0;
+  rate_down = @logic ? 0 : $d_TIM3;
+}
+
+//
+
+Node TIGIT {
+  logic = (!FOXP3 & TIGIT_L & !PRDM1 & MAF) | (!FOXP3 & TIGIT_L & PRDM1) | (FOXP3 & TIGIT_L);
+  rate_up = @logic ? $u_TIGIT : 0;
+  rate_down = @logic ? 0 : $d_TIGIT;
+}
+
+
+
+//_____activating immune checkpoint______
+
+Node ICOS {
+  logic = (!MAPKs & !Ca_NFAT & !FOXP3 & !NFAT & !NFIL3 & ICOS_L & PRDM1) | (!MAPKs & !Ca_NFAT & !FOXP3 & NFAT & !NFIL3 & ICOS_L) | (!MAPKs & !Ca_NFAT & FOXP3 & !NFIL3 & ICOS_L) | (!MAPKs & Ca_NFAT & !NFIL3 & ICOS_L) | (MAPKs & !NFIL3 & ICOS_L);
+  rate_up = @logic ? $u_ICOS : 0;
+  rate_down = @logic ? 0 : $d_ICOS;
+}
+
+
+// superfamily of receptors for TNFRs; behaves as an activating immune checkpoint.
+
+Node TRAFs {
+  logic = (TNFRs);
+  rate_up = @logic ? $u_TRAFs : 0;
+  rate_down = @logic ? 0 : $d_TRAFs;
+}
+
+
+
+
+
+
+
+// Wnt and NF-κB pathways as two key signal transduction pathways that are regulated by CK2 activity, in embryonic development and in cancer. These results suggest that inhibiting CK2 could be useful in treating cancer  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3905806/
+
+
+Node CK2 {
+  logic = (!PD1);
+  rate_up = @logic ? $u_CK2 : 0;
+  rate_down = @logic ? 0 : $d_CK2;
+}
+
+// PTEN is a negative regulator of a major cell growth and survival signaling pathway, namely the phosphatidylinositol-3-kinase (PI3K)/AKT signaling pathway  https://www.frontiersin.org/articles/10.3389/fendo.2018.00338/full
+
+Node PTEN {
+  logic = (!CK2);
+  rate_up = @logic ? $u_PTEN : 0;
+  rate_down = @logic ? 0 : $d_PTEN;
+}
+
+// Protein phosphatase 2A (PP2A) plays a critical multi-faceted role in the regulation of the cell cycle.  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4905575/
+
+Node PP2A {
+  logic = (CTLA4);
+  rate_up = @logic ? $u_PP2A : 0;
+  rate_down = @logic ? 0 : $d_PP2A;
+}
+
+// The established paradigm emphasizes SHIP's inhibitory receptor-dependent function in regulating PI3K  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3569986/
+
+Node SHIP {
+  logic = (TIGIT);
+  rate_up = @logic ? $u_SHIP : 0;
+  rate_down = @logic ? 0 : $d_SHIP;
+}
+
+// PD1 activates SHP which results into initiating T cell inactivation  https://advances.sciencemag.org/content/6/5/eaay4458
+
+Node SHP {
+  logic = (PD1);
+  rate_up = @logic ? $u_SHP : 0;
+  rate_down = @logic ? 0 : $d_SHP;
+}
+
+// The dimeric transcription factor complex Activator Protein-1 (AP-1) is a group of proteins involved in a wide array of cell processes and a critical regulator of nuclear gene expression during T-cell activation. It is also one of the downstream targets of the MAPK signaling cascade  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6678392/
+
+Node AP1 {
+  logic = (MAPKs);
+  rate_up = @logic ? $u_AP1 : 0;
+  rate_down = @logic ? 0 : $d_AP1;
+}
+
+// YY1 is shown to positively regulate the checkpoint receptors PD1, Lag3, and Tim3 and to negatively regulate the type I cytokines interleukin-2 (IL-2) (in collaboration with Ezh2 histone methyltransferase) and interferon gamma (IFN-γ)  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6136936/
+
+Node YY1 {
+  logic = (MAPKs);
+  rate_up = @logic ? $u_YY1 : 0;
+  rate_down = @logic ? 0 : $d_YY1;
+}
+
+// NFAT partecipate to the activation of IL2 production and differentiation of CTLs https://www.nature.com/articles/nri1632
+
+Node NFAT {
+  logic = (Ca_NFAT & !GSK3);
+  rate_up = @logic ? $u_NFAT : 0;
+  rate_down = @logic ? 0 : $d_NFAT;
+}
+
+//  Animal models and cell line studies both indicate a critical role for Lck and Fyn in proximal T-cell antigen receptor (TCR) signal transduction   https://www.nature.com/articles/1208074
+
+Node LCK_FYN {
+  logic = (!TIM3 & CD8) | (CD4 & !TIM3);
+  rate_up = @logic ? $u_LCK_FYN : 0;
+  rate_down = @logic ? 0 : $d_LCK_FYN;
+}
+
+// Smad2 and Smad3 are redundantly essential for TGF-beta-mediated induction of Foxp3-expressing regulatory T cells and suppression of IFN-gamma production in CD4(+) T cells   https://pubmed.ncbi.nlm.nih.gov/20548029/
+
+Node SMAD2_3 {
+  logic = (TGFbR & !SMAD7);
+  rate_up = @logic ? $u_SMAD2_3 : 0;
+  rate_down = @logic ? 0 : $d_SMAD2_3;
+}
+
+// SMAD7 is inhibited by FOXP3 expressing CD4+ T cells https://www.jimmunol.org/content/172/9/5149.long
+
+Node SMAD7 {
+  logic = (!FOXP3);
+  rate_up = @logic ? $u_SMAD7 : 0;
+  rate_down = @logic ? 0 : $d_SMAD7;
+}
+
+// We discovered that NFIL3 directly binds to and negatively regulates the expression of Foxp3  https://www.nature.com/articles/s12276-019-0280-9
+
+Node NFIL3 {
+  logic = (!SMAD2_3 & STAT3);
+  rate_up = @logic ? $u_NFIL3 : 0;
+  rate_down = @logic ? 0 : $d_NFIL3;
+}
+
+//  GRB2 regulates signaling downstream of adaptors and receptors by both recruiting effector proteins and regulating the formation of signaling complexes https://www.frontiersin.org/articles/10.3389/fimmu.2015.00141/full 
+
+Node GRB2 {
+  logic = (CD28); 
+  rate_up = @logic ? $u_GRB2 : 0;
+  rate_down = @logic ? 0 : $d_GRB2;
+}
+
+// The seminal finding that GSK3 beta controls PDL1 levels indicates a possible effect of GSK3 beta inhibition on the immune reaction against tumors https://www.frontiersin.org/articles/10.3389/fonc.2020.01221/full
+
+Node GSK3 {
+  logic = (!PI3K_AKT);
+  rate_up = @logic ? $u_GSK3 : 0;
+  rate_down = @logic ? 0 : $d_GSK3;
+}
+
+
+
+//_____T Cell types_____
+
+Node Th1 {
+
+	logic = (CD4 & CD28 & TCR_II & IL12R & Ca_NFAT & Tbet) | Th1; 
+	rate_up = @logic ? $u_Th1 : 0.0;
+	rate_down = 0.0;
+}
+
+Node Th2 {
+
+	logic = (CD4 & CD28 & TCR_II & (IL4R | IL2R) & !(Th1 | Th17 | Treg)) | Th2; 
+	rate_up = @logic ? $u_Th2 : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node Th17 {
+
+	logic = (CD4 & CD28 & TCR_II) & (IL6R | IL1BR | TGFbR) & !(Th1 | Th2 | Treg) | Th17;
+	rate_up = @logic ? $u_Th17 : 0.0;
+	rate_down = 0.0;
+}
+
+
+Node Treg {
+
+	logic = (Treg & FOXP3) | ((CD4 & CD28 & TCR_II) & (TGFbR | IL2R) & !(Th1 | Th2 | Th17) & FOXP3) | ((CD4 & CD28 & TCR_II) & (IFNgR | IL27R) & !(Th1 | Th2 | Th17) & !IL27R & FOXP3); 
+	rate_up = @logic ? $u_Treg : 0.0;
+	rate_down = 0.0;
+}
+
+Node preCTL {
+
+	logic = (IL2R & CD8 & TCR_I);
+	rate_up = @logic ? $u_preCTL : 0.0;
+	rate_down = 0.0;
+}
+
+Node CTL {
+
+	logic = ((IFNgR & preCTL & Ca_NFAT & Tbet) | (IL2R & preCTL & Ca_NFAT & Tbet)) & !CTLA4;
+	rate_up = @logic ? $u_CTL : 0.0;
+	rate_down = 0 ;
+}
+
+
+
+// Ligands
+
+//________________DAMPs________________
+
+//________Calreticulin exposure submodule
+
+
+Node ROS {
+  logic = (DyingTumor & ChemoT);
+  rate_up = @logic ? $u_ROS : 0;
+  rate_down = @logic ? 0 : $d_ROS;
+}
+
+Node iNOS {
+  logic = (DyingTumor & ChemoT);
+  rate_up = @logic ? $u_iNOS : 0;
+  rate_down = @logic ? 0 : $d_iNOS;
+}
+
+Node eIF2a {
+  logic = (DyingTumor & ROS & (PERK | !PP1_GADD34));
+  rate_up = @logic ? $u_eIF2a : 0;
+  rate_down = @logic ? 0 : $d_eIF2a;
+}
+
+Node PERK {
+  logic = (DyingTumor & ROS);
+  rate_up = @logic ? $u_PERK : 0;
+  rate_down = @logic ? 0 : $d_PERK;
+}
+
+Node PP1_GADD34 {
+  logic = (DyingTumor & eIF2a);
+  rate_up = @logic ? $u_PP1_GADD34 : 0;
+  rate_down = @logic ? 0 : $d_PP1_GADD34;
+}
+
+Node SERCA_Ca2 {
+  logic = (DyingTumor & ChemoT);
+  rate_up = @logic ? $u_SERCA_Ca2 : 0;
+  rate_down = @logic ? 0 : $d_SERCA_Ca2;
+}
+
+Node TRAIL {
+  logic = DyingTumor & ChemoT & SERCA_Ca2 & PERK;
+  rate_up = @logic ? $u_TRAIL : 0.0;
+  rate_down = @logic ? 0.0 : $d_TRAIL;
+  }
+
+Node CASP8 {
+  logic = (DyingTumor & TRAIL);
+  rate_up = @logic ? $u_CASP8 : 0;
+  rate_down = @logic ? 0 : $d_CASP8;
+}
+
+Node BAP31 {
+  logic = (DyingTumor & !CASP8);
+  rate_up = @logic ? $u_BAP31 : 0;
+  rate_down = @logic ? 0 : $d_BAP31;
+}
+
+Node BAX {
+  logic = (DyingTumor & !BAP31 & CASP8);
+  rate_up = @logic ? $u_BAX : 0;
+  rate_down = @logic ? 0 : $d_BAX;
+}
+
+
+Node BAK {
+  logic = (DyingTumor & !BAP31 & CASP8);
+  rate_up = @logic ? $u_BAK : 0;
+  rate_down = @logic ? 0 : $d_BAK;
+}
+
+Node translocation {
+  logic = (DyingTumor & BAX & BAK & PP1_GADD34);
+  rate_up = @logic ? $u_translocation : 0;
+  rate_down = @logic ? 0 : $d_translocation;
+}
+
+Node actin {
+  logic = (DyingTumor & translocation);
+  rate_up = @logic ? $u_actin : 0;
+  rate_down = @logic ? 0 : $d_actin ;
+}
+
+Node VAMP1 {
+  logic = (DyingTumor & translocation & actin);
+  rate_up = @logic ? $u_VAMP1 : 0;
+  rate_down = @logic ? 0 : $d_VAMP1;
+}
+
+Node SNAP23 {
+  logic = (VAMP1 & translocation);
+  rate_up = @logic ? $u_SNAP23 : 0;
+  rate_down = @logic ? 0 : $d_SNAP23;
+}
+
+Node CALR {
+  logic = (DyingTumor & SNAP23);
+  rate_up = @logic ? $u_CALR : 0;
+  rate_down = @logic ? 0 : $d_CALR;
+}
+
+
+
+
+
+
+
+
+
+
+Node ATP {
+
+	logic = (DyingTumor);
+	rate_up = @logic ? $u_ATP : 0.0;
+	rate_down = @logic ? 0.0 : $d_ATP;
+}
+
+Node ANXA1 {
+
+	logic = (DyingTumor);
+	rate_up = @logic ? $u_ANXA1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_ANXA1;
+}
+
+Node HMGB1 {
+
+	logic = (DyingTumor & ANXA1);
+	rate_up = @logic ? $u_HMGB1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_HMGB1;
+}
+
+
+
+Node CXCL10 {
+
+	logic = (Tumor & IFN1R);
+	rate_up = @logic ? $u_CXCL10 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CXCL10;
+}
+
+
+
+
+
+//_____Checkpoints Ligands_____
+
+// inhibiting:
+
+// https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4696019/
+
+
+Node LAG3_L {
+  logic = (LAG3_L);
+  rate_up = @logic ? $u_LAG3_L : 0;
+  rate_down = @logic ? 0 : $d_LAG3_L;
+}
+
+
+Node TIM3_L {
+  logic = (TIM3_L);
+  rate_up = @logic ? $u_TIM3_L : 0;
+  rate_down = @logic ? 0 : $d_TIM3_L;
+}
+
+Node TIGIT_L {
+  logic = (TIGIT_L);
+  rate_up = @logic ? $u_TIGIT_L : 0;
+  rate_down = @logic ? 0 : $d_TIGIT_L;
+}
+
+Node PD_L1 {
+	
+	logic = (Tumor) | ((CD8 | CD4) & IFNgR);
+	rate_up = @logic ? $u_PD_L1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_PD_L1;
+}
+
+
+// activating:
+
+Node TNFRs_L {
+  logic = (TNFRs_L);
+  rate_up = @logic ? $u_TNFRs_L : 0;
+  rate_down = @logic ? 0 : $d_TNFRs_L;
+}
+
+Node ICOS_L {
+  logic = (ICOS_L);
+  rate_up = @logic ? $u_ICOS_L : 0;
+  rate_down = @logic ? 0 : $d_ICOS_L;
+}
+
+
+// dendritic cells specific ligands:
+
+Node CD80 {
+
+	logic = ((a_cDC1 | a_cDC2) & TLR4 & LRP1);
+	rate_up = @logic ? $u_CD80 : 0.0;
+	rate_down = @logic ? 0.0 : $d_CD80;
+}
+
+Node MHC_I {
+
+	logic = (a_cDC1 & TLR4 & LRP1);
+	rate_up = @logic ? $u_MHC_I : 0.0;
+	rate_down = @logic ? 0.0 : $d_MHC_I;
+}
+
+Node MHC_II {
+
+	logic = ((a_cDC1 | a_cDC2) & TLR4 & LRP1);
+	rate_up = @logic ? $u_MHC_II : 0.0;
+	rate_down = @logic ? 0.0 : $d_MHC_II;
+}
+
+
+
+// interleukins
+
+Node IL1B {
+	
+	logic = (a_cDC2 & TLR4 & LRP1);
+	rate_up = @logic ? $u_IL1B : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL1B;
+}
+
+Node IL2 {
+
+	logic = (NFkB & AP1 & NFAT & CD4 & CD28 & TCR_II & CD4_Act) | (Th1 & CD4_Act) | (a_cDC2 & TLR4 & TCR_II ) | (Treg & CD4_Act);
+	rate_up = @logic ? $u_IL2 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL2;
+}
+
+Node IL4 {
+
+	logic = (Th2 & CD4_Act) | ((CD4 & CD28 & TCR_II) & CD4_Act) | (a_cDC2 & TLR4 & TCR_II );
+	rate_up = @logic ? $u_IL4 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL4;
+}
+
+Node IL6 {
+
+	logic = (pDC | moDC ) | (a_cDC2 & TLR4 & TCR_II) | (Th17 & CD4_Act) ;
+	rate_up = @logic ? $u_IL6 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL6;
+}
+
+Node IL10 {
+
+	logic = (a_cDC2 & TLR4) | (Treg & CD4_Act);
+	rate_up = @logic ? $u_IL10 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL10;
+}
+
+Node IL12 {
+
+	logic = (a_cDC1 & TLR4);
+	rate_up = @logic ? $u_IL12 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL12;
+}
+
+Node IL17 {
+
+	logic = (IL1BR & Th17 & CD4_Act);
+	rate_up = @logic ? $u_IL17 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL17;
+}
+
+Node IL27 {
+
+	logic = (a_cDC1 & TLR4);
+	rate_up = @logic ? $u_IL27 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IL27;
+}
+
+
+Node IFNg {
+
+	logic = (IL12R & CTL) | (IFNgR & Th1 & CD4_Act) | (IL12R & CTL) | ((CD4 & CD28 & TCR_II) & IL12R & CD4_Act ) | (IL12R & Th1 & CD4_Act) | moDC | pDC;
+	rate_up = @logic ? $u_IFNg : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFNg;
+}
+
+
+Node TGFb {
+
+	logic = (CD4 & CD4_Act) | (Treg & CD4_Act) | Tumor | a_cDC2 | moDC;
+	rate_up = @logic ? $u_TGFb : 0.0;
+	rate_down = @logic ? 0.0 : $d_TGFb;
+}
+
+Node Perforin {
+
+	logic = CTL;
+	rate_up = @logic ? $u_Perforin : 0.0;
+	rate_down = (-log(1-$pop_Tumor))/$PerforinRecycled;
+}
+
+
+
+
+Node IFN1 {
+
+	logic = (Tumor & TLR4) | ((cDC1 | cDC2) & TLR4);
+	rate_up = @logic ? $u_IFN1 : 0.0;
+	rate_down = @logic ? 0.0 : $d_IFN1;
+}
+
+Node Division {
+
+
+	rate_up = (Tumor? $growth_tumor : 0.0) + ((CTL & !(Perforin) & Proliferation_Survival) ? $clonal_exp_rate : 0.0);
+	rate_down = 0.0;
+}
+
+Node Death {
+
+	rate_up = (Tumor ? ((-log(1-$rate_perforin)*$aggressivity)+$ChemoEffect) : 0.0) + (Perforin ? $PerforinDeath : 0.0) + ((CTL & Perforin) ? 0.03 : 0.0 ); //no death of CTL ?
+	rate_down = 0.0;
+}
+
