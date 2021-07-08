@@ -468,7 +468,7 @@ Node PKC_teta {
 
 //_____inhibiting immune checkpoints_____
 
-
+//LAG3's main ligand is MHC class II, to which it binds with higher affinity than CD4. The protein negatively regulates cellular proliferation, activation and homeostasis of T cells, in a similar fashion to CTLA-4 and PD-1 and has been reported to play a role in Treg suppressive function.
 
 Node LAG3 {
   logic = (!Tbet & !YY1 & !LAG3_L & MHC_II & !PRDM1 & MAF) | (!Tbet & !YY1 & !LAG3_L & MHC_II & PRDM1) | (!Tbet & !YY1 & LAG3_L & !PRDM1 & MAF) | (!Tbet & !YY1 & LAG3_L & PRDM1) | (!Tbet & YY1 & !LAG3_L & MHC_II) | (!Tbet & YY1 & LAG3_L);
@@ -511,11 +511,6 @@ Node TRAFs {
   rate_up = @logic ? $u_TRAFs : 0;
   rate_down = @logic ? 0 : $d_TRAFs;
 }
-
-
-
-
-
 
 
 // Wnt and NF-κB pathways as two key signal transduction pathways that are regulated by CK2 activity, in embryonic development and in cancer. These results suggest that inhibiting CK2 could be useful in treating cancer  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3905806/
@@ -637,7 +632,7 @@ Node GSK3 {
 
 Node Th1 {
 
-	logic = (CD4 & CD28 & TCR_II & IL12R & Ca_NFAT & Tbet) | Th1; 
+	logic = (CD4 & CD28 & TCR_II & IL12R & Ca_NFAT & Tbet & !(Th2 | Th17 | Treg)) | Th1; 
 	rate_up = @logic ? $u_Th1 : 0.0;
 	rate_down = 0.0;
 }
