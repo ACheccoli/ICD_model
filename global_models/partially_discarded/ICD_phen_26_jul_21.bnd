@@ -1,0 +1,32 @@
+//////////////////////// Cell types ////////////////////
+
+// Tumor cells: population status has to be modeled according to the drug administrated: get D0 data, or run in vitro
+Node Tumor {
+             rate_up = 0.0;
+             rate_down = 0.0;
+}
+
+
+// inactive differentiated conventional dendritic cells type 1; lie in the lymphatic system and migrate in the TME under the effect of NK cells.
+Node i_cDC1 {
+	       rate_up = 0.0;
+	       rate_down = 0.0;
+}
+
+Node migr_cDC1 {
+			logic = NK_stimulus;
+			rate_up = logic? 1/6. : 0.0;
+			rate_down = logic ? 0.0 : 50.;
+}
+
+Node NK_cells {
+	       rate_up = 0.0;
+	       rate_down = 0.0;
+}
+
+Node NK_stimulus {
+			logic = Tumor;
+			rate_up = logic? 1/2. : 0.0;
+			rate_down = logic? 0.0 : 1/2.;
+}
+

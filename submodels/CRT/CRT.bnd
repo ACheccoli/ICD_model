@@ -1,0 +1,107 @@
+Node Tumor {
+  rate_up = 0.0;
+  rate_down = 0.0;
+}
+
+Node ANTHRACYCL {
+  logic = (ANTHRACYCL);
+  rate_up = @logic ? $u_ANTHRACYCL : 0;
+  rate_down = @logic ? 0 : $d_ANTHRACYCL;
+}
+
+Node ROS {
+  logic = (Tumor & ANTHRACYCL);
+  rate_up = @logic ? $u_ROS : 0;
+  rate_down = @logic ? 0 : $d_ROS;
+}
+
+Node iNOS {
+  logic = (Tumor & ANTHRACYCL);
+  rate_up = @logic ? $u_iNOS : 0;
+  rate_down = @logic ? 0 : $d_iNOS;
+}
+
+Node eIF2a {
+  logic = (Tumor & ROS & (PERK | !PP1_GADD34));
+  rate_up = @logic ? $u_eIF2a : 0;
+  rate_down = @logic ? 0 : $d_eIF2a;
+}
+
+Node PERK {
+  logic = (Tumor & ROS);
+  rate_up = @logic ? $u_PERK : 0;
+  rate_down = @logic ? 0 : $d_PERK;
+}
+
+Node PP1_GADD34 {
+  logic = (Tumor & eIF2a);
+  rate_up = @logic ? $u_PP1_GADD34 : 0;
+  rate_down = @logic ? 0 : $d_PP1_GADD34;
+}
+
+Node SERCA_Ca2 {
+  logic = (Tumor & ANTHRACYCL);
+  rate_up = @logic ? $u_SERCA_Ca2 : 0;
+  rate_down = @logic ? 0 : $d_SERCA_Ca2;
+}
+
+Node TRAIL {
+  logic = Tumor & ANTHRACYCL & SERCA_Ca2 & PERK;
+  rate_up = @logic ? $u_TRAIL : 0.0;
+  rate_down = @logic ? 0.0 : $d_TRAIL;
+  }
+
+Node CASP8 {
+  logic = (Tumor & TRAIL);
+  rate_up = @logic ? $u_CASP8 : 0;
+  rate_down = @logic ? 0 : $d_CASP8;
+}
+
+Node BAP31 {
+  logic = (Tumor & !CASP8);
+  rate_up = @logic ? $u_BAP31 : 0;
+  rate_down = @logic ? 0 : $d_BAP31;
+}
+
+Node BAX {
+  logic = (Tumor & !BAP31 & CASP8);
+  rate_up = @logic ? $u_BAX : 0;
+  rate_down = @logic ? 0 : $d_BAX;
+}
+
+
+Node BAK {
+  logic = (Tumor & !BAP31 & CASP8);
+  rate_up = @logic ? $u_BAK : 0;
+  rate_down = @logic ? 0 : $d_BAK;
+}
+
+Node translocation {
+  logic = (Tumor & BAX & BAK & PP1_GADD34);
+  rate_up = @logic ? $u_translocation : 0;
+  rate_down = @logic ? 0 : $d_translocation;
+}
+
+Node actin {
+  logic = (Tumor & translocation);
+  rate_up = @logic ? $u_actin : 0;
+  rate_down = @logic ? 0 : $d_actin ;
+}
+
+Node VAMP1 {
+  logic = (Tumor & translocation & actin);
+  rate_up = @logic ? $u_VAMP1 : 0;
+  rate_down = @logic ? 0 : $d_VAMP1;
+}
+
+Node SNAP23 {
+  logic = (VAMP1 & translocation);
+  rate_up = @logic ? $u_SNAP23 : 0;
+  rate_down = @logic ? 0 : $d_SNAP23;
+}
+
+Node ERp57_CRT {
+  logic = (Tumor & SNAP23);
+  rate_up = @logic ? $u_ERp57_CRT : 0;
+  rate_down = @logic ? 0 : $d_ERp57_CRT;
+}
